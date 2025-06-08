@@ -1,0 +1,17 @@
+{
+    "appearance": {
+        "theme": "Dark Theme",
+        "button_style": "macOS style"
+    },
+    "security": {
+        "autolock_minutes": 15.0
+    },
+    "interface": {
+        "language": "ru",
+        "show_password_strength": true
+    },
+    "version": {
+        "current": "1.0.0",
+        "last_check": null
+    }
+}
