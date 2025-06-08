@@ -313,7 +313,7 @@ class PasswordManagerUI(QMainWindow):
 
         # Добавляем поле поиска в контейнер
         search_layout.addWidget(self.search_input)
-        
+
         # Добавляем элементы в тулбар
         toolbar_layout.addWidget(left_container)
         toolbar_layout.addStretch()
@@ -455,7 +455,7 @@ class PasswordManagerUI(QMainWindow):
         layout = QVBoxLayout(self.left_panel_widget)
         layout.setContentsMargins(10, 20, 10, 20)
         layout.setSpacing(15)
-
+        
         # Кнопки управления
         self.master_password_btn = QPushButton()
         self.master_password_btn.setIcon(QIcon("icons/LogPin.png"))
@@ -591,7 +591,7 @@ class PasswordManagerUI(QMainWindow):
         # Стек панелей
         self.left_stack.addWidget(self.left_panel_widget)
         self.left_stack.addWidget(self.settings_panel)
-
+        
         # Создаем контейнер для стека с правильным layout
         stack_container = QWidget()
         stack_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
