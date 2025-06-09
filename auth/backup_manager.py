@@ -15,7 +15,17 @@ class BackupManager:
     @classmethod
     def _ensure_backup_dir_exists(cls):
         if not os.path.exists(cls.BACKUP_DIR):
-            os.makedirs(cls.BACKUP_DIR, mode=0o700)
+            try:
+                os.makedirs(cls.BACKUP_DIR)
+                # На Windows устанавливаем права через icacls
+                if os.name == 'nt':
+                    os.system(f'icacls "{cls.BACKUP_DIR}" /grant:r "%USERNAME%":(OI)(CI)F /T')
+                else:
+                    os.chmod(cls.BACKUP_DIR, 0o700)
+            except Exception as e:
+                print(f"Ошибка создания директории бэкапов: {str(e)}")
+                # Создаем директорию без специальных прав
+                os.makedirs(cls.BACKUP_DIR, exist_ok=True)
 
     def _get_backup_path(self, original_path: str, timestamp: int = None) -> str:
         base_name = os.path.basename(original_path)

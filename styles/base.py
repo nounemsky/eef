@@ -134,6 +134,25 @@ QLineEdit {
 QLineEdit:focus {
     border: 1px solid #606060;
 }
+
+QToolButton {
+    background-color: transparent;
+    border: none;
+    padding: 0px;
+}
+
+QLabel#messageLabel {
+    color: #ff3b30;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+QLabel#titleLabel {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
 """
 
 # Стили для групп настроек и секций

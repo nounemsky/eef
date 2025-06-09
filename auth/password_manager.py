@@ -40,7 +40,17 @@ class PasswordManager:
     def _ensure_vault_dir_exists(self):
         """Создает директорию для хранилища если она не существует"""
         if not os.path.exists(self.VAULT_DIR):
-            os.makedirs(self.VAULT_DIR, mode=0o700)
+            try:
+                os.makedirs(self.VAULT_DIR)
+                # На Windows устанавливаем права через icacls
+                if os.name == 'nt':
+                    os.system(f'icacls "{self.VAULT_DIR}" /grant:r "%USERNAME%":(OI)(CI)F /T')
+                else:
+                    os.chmod(self.VAULT_DIR, 0o700)
+            except Exception as e:
+                print(f"Ошибка создания директории хранилища: {str(e)}")
+                # Создаем директорию без специальных прав
+                os.makedirs(self.VAULT_DIR, exist_ok=True)
 
     def _load_data(self):
         """Загружает данные из хранилища"""

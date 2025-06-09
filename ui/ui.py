@@ -35,6 +35,9 @@ from widgets.password_widgets import TagsContainer, ChipWidget
 from widgets.animated_panel import AnimatedPanel
 from widgets.overlay_message import OverlayMessage
 from styles.themes import THEMES
+from styles.base import APP_STYLES, SEARCH_STYLES, NOTES_STYLES
+from styles.components import WINDOW_CONTROL_STYLES, PANEL_STYLES, WINDOW_BUTTON_STYLES
+from styles.widgets import ADD_BUTTON_STYLES
 
 class VerticalFlowLayout(QLayout):
     def __init__(self, parent=None, margin=0, spacing=0, column_count=1):
@@ -145,27 +148,23 @@ class PasswordManagerUI(QMainWindow):
         # Инициализируем анимацию правой панели
         self.panel_animator = AnimatedPanel(self.right_panel, self.main_splitter)
 
-    def apply_saved_settings(self):
-        """Применяет сохраненные настройки"""
-        # Применяем стиль кнопок
-        button_style = self.settings_manager.get_setting("appearance", "button_style")
-        if button_style == "macOS style":
-            self.mac_style_radio.setChecked(True)
-        else:
-            self.win_style_radio.setChecked(True)
-        
-        # Применяем время автоблокировки (конвертируем минуты в секунды)
-        autolock_minutes = self.settings_manager.get_setting("security", "autolock_minutes")
-        self.autolock_spin.setValue(int(autolock_minutes * 60))
-
     def set_theme(self, theme_name):
-        self.current_theme = theme_name
-        self.theme_styles = THEMES[theme_name]
+        # Преобразуем название темы в нижний регистр для соответствия ключам в THEMES
+        theme_key = theme_name.lower() if theme_name else "default"
+        
+        # Проверяем, существует ли тема
+        if theme_key not in THEMES:
+            print(f"Theme '{theme_key}' not found, using default theme")
+            theme_key = "default"
+            
+        self.current_theme = theme_key
+        self.theme_styles = THEMES[theme_key]
         self.styles = self.theme_styles["APP_STYLES"]
         self.window_control_styles = self.theme_styles["WINDOW_CONTROL_STYLES"]
+        
         # Применяем стили к основным элементам
         if hasattr(self, 'tags_container'):
-            print("Applying theme to tags_container:", theme_name)
+            print("Applying theme to tags_container:", theme_key)
             print("Theme styles for tags:", self.theme_styles["TAGS_CONTAINER_STYLES"])
             self.tags_container.setStyleSheet(self.theme_styles["TAGS_CONTAINER_STYLES"])
             # Обновляем стили всех ChipWidget
@@ -191,13 +190,51 @@ class PasswordManagerUI(QMainWindow):
             self.main_splitter.setStyleSheet(self.theme_styles["PANEL_STYLES"])
         if hasattr(self, 'settings_group'):
             self.settings_group.setStyleSheet(self.theme_styles.get("SETTINGS_GROUPBOX_STYLES", ""))
+        if hasattr(self, 'theme_combo'):
+            self.theme_combo.setStyleSheet(self.theme_styles["THEME_COMBOBOX_STYLES"])
         # Применяем общий стиль к контейнеру
         if hasattr(self, 'centralWidget'):
             cw = self.centralWidget()
             if cw:
                 cw.setStyleSheet(self.theme_styles["APP_STYLES"])
-        # Обновить дочерние виджеты, если нужно
+        
+        # Обновляем тему в AuthWidget, если он существует
+        if hasattr(self, 'auth_widget') and self.auth_widget is not None:
+            print(f"Updating AuthWidget theme to: {theme_key}")  # Отладочный вывод
+            self.auth_widget.update_theme(theme_key)
+        
+        # Сохраняем выбранную тему в настройках
+        self.settings_manager.set_setting("appearance", "theme", theme_key)
+        
+        # Обновить дочерние виджеты
         self.repaint()
+
+    def apply_saved_settings(self):
+        """Применяет сохраненные настройки"""
+        # Применяем тему
+        saved_theme = self.settings_manager.get_setting("appearance", "theme")
+        if saved_theme and saved_theme.lower() in THEMES:
+            self.theme_combo.setCurrentText(saved_theme.capitalize())
+            self.set_theme(saved_theme)
+        else:
+            # Если тема не найдена или не указана, используем тему по умолчанию
+            self.theme_combo.setCurrentText("Default")
+            self.set_theme("default")
+        
+        # Применяем стиль кнопок
+        button_style = self.settings_manager.get_setting("appearance", "button_style")
+        if button_style == "macOS style":
+            self.mac_style_radio.setChecked(True)
+        else:
+            self.win_style_radio.setChecked(True)
+        
+        # Применяем время автоблокировки (конвертируем минуты в секунды)
+        autolock_minutes = self.settings_manager.get_setting("security", "autolock_minutes")
+        if autolock_minutes is not None:
+            self.autolock_spin.setValue(int(autolock_minutes * 60))
+        else:
+            # Устанавливаем значение по умолчанию (5 минут)
+            self.autolock_spin.setValue(300)
 
     def init_ui(self):
         self.setWindowTitle("Secure Password Manager")
@@ -273,20 +310,7 @@ class PasswordManagerUI(QMainWindow):
 
         for btn in [self.win_minimize_btn, self.win_maximize_btn, self.win_close_btn]:
             btn.setFixedSize(30, 30)
-            btn.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    color: white;
-                    border-left: 1px solid #444;
-                    font-size: 20px;
-                    font-weight: bold;
-                    padding: 0px;
-                    text-align: center;
-                }
-                QPushButton:hover {
-                    background-color: rgba(255, 255, 255, 0.15);
-                }
-            """)
+            btn.setProperty('class', 'windowButton')
 
         self.win_minimize_btn.clicked.connect(self.showMinimized)
         self.win_maximize_btn.clicked.connect(self.toggle_maximized)
@@ -296,6 +320,7 @@ class PasswordManagerUI(QMainWindow):
         win_layout.addWidget(self.win_maximize_btn)
         win_layout.addWidget(self.win_close_btn)
         right_layout.addWidget(self.window_controls_win)
+        self.window_controls_win.setStyleSheet(self.theme_styles["WINDOW_BUTTON_STYLES"])
         self.window_controls_win.hide()
 
         # Поиск
@@ -518,15 +543,19 @@ class PasswordManagerUI(QMainWindow):
         appearance_label = QLabel("Appearance")
         appearance_label.setStyleSheet("font-weight: bold; font-size: 15px; margin-bottom: 4px;")
         settings_group_layout.addWidget(appearance_label)
-        # Theme radio
+
+        # Theme combobox
         theme_layout = QHBoxLayout()
-        self.default_theme_radio = QRadioButton("Default")
-        self.cyberpunk_theme_radio = QRadioButton("Cyberpunk")
-        self.default_theme_radio.setChecked(self.current_theme == "default")
-        self.cyberpunk_theme_radio.setChecked(self.current_theme == "cyberpunk")
-        theme_layout.addWidget(self.default_theme_radio)
-        theme_layout.addWidget(self.cyberpunk_theme_radio)
+        theme_label = QLabel("Theme")
+        theme_label.setStyleSheet("font-size: 13px;")
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["Default", "Cyberpunk"])
+        self.theme_combo.setCurrentText("Default" if self.current_theme == "default" else "Cyberpunk")
+        self.theme_combo.setStyleSheet(self.theme_styles["THEME_COMBOBOX_STYLES"])
+        theme_layout.addWidget(theme_label)
+        theme_layout.addWidget(self.theme_combo)
         settings_group_layout.addLayout(theme_layout)
+
         # Window controls radio
         window_controls_label = QLabel("Window controls")
         window_controls_label.setStyleSheet("font-size: 13px; margin-top: 8px;")
@@ -761,8 +790,7 @@ class PasswordManagerUI(QMainWindow):
         print("Event filters installed")  # Отладка
 
         # Подключаем сигналы для тем
-        self.default_theme_radio.toggled.connect(lambda checked: checked and self.set_theme("default"))
-        self.cyberpunk_theme_radio.toggled.connect(lambda checked: checked and self.set_theme("cyberpunk"))
+        self.theme_combo.currentTextChanged.connect(lambda text: self.set_theme(text))
 
     def eventFilter(self, obj, event):
         """Фильтр событий для отслеживания активности пользователя"""
@@ -814,7 +842,12 @@ class PasswordManagerUI(QMainWindow):
         saved_username = self.user_credentials.get_saved_username() or ""
         
         # Создаем новый виджет аутентификации
-        self.auth_widget = AuthWidget(username=saved_username, is_password_change=True, main_window=self)
+        self.auth_widget = AuthWidget(
+            username=saved_username,
+            is_password_change=True,
+            main_window=self,
+            theme=self.current_theme  # Добавляем текущую тему
+        )
         self.auth_widget.accepted.connect(self.handle_password_change)
         
         # Сначала добавляем виджет в стек
@@ -925,7 +958,8 @@ class PasswordManagerUI(QMainWindow):
             self.auth_widget = AuthWidget(
                 username=saved_username,
                 is_first_launch=False,
-                main_window=self  # Добавляем ссылку на главное окно
+                main_window=self,  # Добавляем ссылку на главное окно
+                theme=self.current_theme  # Добавляем текущую тему
             )
             self.auth_widget.accepted.connect(self.handle_pin_entry)
             
@@ -1344,7 +1378,8 @@ class PasswordManagerUI(QMainWindow):
             username=saved_username or "",
             is_first_launch=is_first_launch,  # Используем правильное значение
             is_password_change=False,
-            main_window=self
+            main_window=self,
+            theme=self.current_theme  # Добавляем текущую тему
         )
 
         # Подключаем сигналы

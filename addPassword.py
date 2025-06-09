@@ -6,21 +6,27 @@ from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QSize
 from PyQt6.QtGui import QFont, QIcon
 import os
 import hashlib
-from styles import AUTH_STYLES, SKIP_BUTTON_STYLES
+from styles.themes import THEMES
 from auth.password_manager import PasswordManager
 
 
 class SkipButton(QPushButton):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, theme="default", **kwargs):
         super().__init__(*args, **kwargs)
-        self.setStyleSheet(SKIP_BUTTON_STYLES)
+        self.setStyleSheet(THEMES[theme]["SKIP_BUTTON_STYLES"])
+
+
+class ContinueButton(QPushButton):
+    def __init__(self, *args, theme="default", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setStyleSheet(THEMES[theme]["CONTINUE_BUTTON_STYLES"])
 
 
 class AuthWidget(QWidget):
     accepted = pyqtSignal()
     skipped = pyqtSignal()
 
-    def __init__(self, username="", is_first_launch=False, is_password_change=False, main_window=None):
+    def __init__(self, username="", is_first_launch=False, is_password_change=False, main_window=None, theme="default"):
         super().__init__()
         if main_window is None:
             raise ValueError("main_window не может быть None")
@@ -29,7 +35,8 @@ class AuthWidget(QWidget):
         self.is_password_change = is_password_change
         self.main_window = main_window
         self._message_label = None
-        self.setStyleSheet(AUTH_STYLES)
+        self.current_theme = theme
+        self.setStyleSheet(THEMES[self.current_theme]["AUTH_STYLES"])
         self.init_ui(username)
 
     def init_ui(self, username):
@@ -47,9 +54,26 @@ class AuthWidget(QWidget):
 
         # Иконка входа
         login_icon = QLabel()
-        icon = QIcon("icons/login.png")
-        pixmap = icon.pixmap(QSize(64, 64))
-        login_icon.setPixmap(pixmap)
+        icon_path = f"styles/images/{self.current_theme}/login.png"
+        print(f"Loading icon from: {icon_path}")  # Отладочный вывод
+        print(f"Current theme: {self.current_theme}")  # Отладочный вывод
+        
+        if os.path.exists(icon_path):
+            print(f"Icon file exists at: {icon_path}")  # Отладочный вывод
+            icon = QIcon(icon_path)
+            if not icon.isNull():
+                print("Icon loaded successfully")  # Отладочный вывод
+                pixmap = icon.pixmap(QSize(64, 64))
+                if not pixmap.isNull():
+                    print("Pixmap created successfully")  # Отладочный вывод
+                    login_icon.setPixmap(pixmap)
+                else:
+                    print(f"Failed to create pixmap from icon: {icon_path}")
+            else:
+                print(f"Failed to load icon: {icon_path}")
+        else:
+            print(f"Icon file not found at: {os.path.abspath(icon_path)}")  # Показываем полный путь
+            
         central_layout.addWidget(login_icon, alignment=Qt.AlignmentFlag.AlignCenter)
         
         # Добавляем отступ после иконки
@@ -59,6 +83,7 @@ class AuthWidget(QWidget):
         title = QLabel("WELCOME!")
         if self.is_password_change:
             title.setText("Изменение учетных данных")
+        title.setObjectName("titleLabel")
         title.setStyleSheet("font-size: 18px; font-weight: bold;")
         central_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
         
@@ -133,27 +158,8 @@ class AuthWidget(QWidget):
         button_layout.setSpacing(10)
 
         # Кнопка продолжения
-        self.continue_btn = QPushButton("Continue")
+        self.continue_btn = ContinueButton("Continue", theme=self.current_theme)
         self.continue_btn.setObjectName("continue-btn")
-        self.continue_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #ffffff;
-                color: #000000;
-                border: none;
-                border-radius: 4px;
-                padding: 8px 16px;
-                font-size: 13px;
-                font-weight: bold;
-                min-width: 100px;
-                min-height: 20px;
-            }
-            QPushButton:hover {
-                background-color: #e0e0e0;
-            }
-            QPushButton:pressed {
-                background-color: #d0d0d0;
-            }
-        """)
         if self.is_password_change:
             self.continue_btn.setText("Сохранить")
         self.continue_btn.clicked.connect(self.validate_and_accept)
@@ -161,13 +167,13 @@ class AuthWidget(QWidget):
 
         # Кнопка "Skip" только при первом запуске
         if self.is_first_launch:
-            self.skip_btn = SkipButton("skip")
+            self.skip_btn = SkipButton("skip", theme=self.current_theme)
             self.skip_btn.clicked.connect(self.skip_auth)
             button_layout.addWidget(self.skip_btn)
 
         # Кнопка "Back" при смене пароля
         if self.is_password_change:
-            self.back_btn = SkipButton("Назад")
+            self.back_btn = SkipButton("Назад", theme=self.current_theme)
             self.back_btn.clicked.connect(self.go_back)
             button_layout.addWidget(self.back_btn)
 
@@ -379,3 +385,31 @@ class AuthWidget(QWidget):
         
         # Обновляем иконку
         self.toggle_pin_btn.setIcon(new_icon)
+
+    def update_theme(self, new_theme):
+        """Обновляет тему виджета"""
+        self.current_theme = new_theme
+        self.setStyleSheet(THEMES[self.current_theme]["AUTH_STYLES"])
+        
+        # Обновляем иконку входа
+        icon_path = f"styles/images/{self.current_theme}/login.png"
+        print(f"Updating icon to: {icon_path}")  # Отладочный вывод
+        
+        if os.path.exists(icon_path):
+            icon = QIcon(icon_path)
+            if not icon.isNull():
+                pixmap = icon.pixmap(QSize(64, 64))
+                if not pixmap.isNull():
+                    # Находим QLabel с иконкой
+                    for child in self.findChildren(QLabel):
+                        if child.pixmap() is not None:
+                            child.setPixmap(pixmap)
+                            break
+        
+        # Обновляем стили кнопок
+        if hasattr(self, 'skip_btn'):
+            self.skip_btn.setStyleSheet(THEMES[self.current_theme]["SKIP_BUTTON_STYLES"])
+        if hasattr(self, 'back_btn'):
+            self.back_btn.setStyleSheet(THEMES[self.current_theme]["SKIP_BUTTON_STYLES"])
+        if hasattr(self, 'continue_btn'):
+            self.continue_btn.setStyleSheet(THEMES[self.current_theme]["CONTINUE_BUTTON_STYLES"])

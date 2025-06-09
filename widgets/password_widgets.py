@@ -9,22 +9,19 @@ from .lazy_icon import LazyIconLabel
 from utils.url_utils import extract_domain
 from utils.password_utils import password_strength
 import os
+from styles.themes import THEMES
 
 
 class TagsContainer(QWidget):
     tag_clicked = pyqtSignal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, theme="default"):
         super().__init__(parent)
-        print("TagsContainer initialized")  # Отладка
+        print("TagsContainer initialized")
         self.setObjectName("TagsContainer")
+        self.theme = theme
         self.scroll = QScrollArea()
-        self.scroll.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background: transparent;
-            }
-        """)
+        self.scroll.setStyleSheet(THEMES[theme]["TAGS_CONTAINER_STYLES"])
         self.scroll.setWidgetResizable(True)
         self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
@@ -33,13 +30,7 @@ class TagsContainer(QWidget):
         self.container.setLayout(self.flow_layout)
 
         self.container.setObjectName("TagsInnerContainer")
-        self.container.setStyleSheet("""
-            QWidget#TagsInnerContainer {
-                background-color: #141414;
-                border-radius: 0px;
-                padding: 5px;
-            }
-        """)
+        self.container.setStyleSheet(THEMES[theme]["TAGS_CONTAINER_STYLES"])
 
         self.scroll.setWidget(self.container)
         main_layout = QVBoxLayout(self)
@@ -48,14 +39,14 @@ class TagsContainer(QWidget):
 
     def add_tag(self, entry_data):
         """Добавляет тег в контейнер"""
-        print(f"Adding tag for {entry_data.get('service', 'unknown')}")  # Отладка
-        chip = ChipWidget(entry_data)
+        print(f"Adding tag for {entry_data.get('service', 'unknown')}")
+        chip = ChipWidget(entry_data, theme=self.theme)
         chip.clicked.connect(lambda data=entry_data: self._on_chip_clicked(data))
         self.flow_layout.addWidget(chip)
         
     def _on_chip_clicked(self, data):
         """Обработчик клика по чипу"""
-        print(f"Chip clicked: {data.get('service', 'unknown')}")  # Отладка
+        print(f"Chip clicked: {data.get('service', 'unknown')}")
         self.tag_clicked.emit(data)
 
     def clear(self):
@@ -70,24 +61,17 @@ class TagsContainer(QWidget):
 class ChipWidget(QWidget):
     clicked = pyqtSignal(dict)
 
-    def __init__(self, entry_data, styles=None, parent=None):
+    def __init__(self, entry_data, theme="default", parent=None):
         super().__init__(parent)
         self.entry_data = entry_data
-        print(f"ChipWidget initialized for {entry_data.get('service', 'unknown')}")  # Отладка
+        print(f"ChipWidget initialized for {entry_data.get('service', 'unknown')}")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setObjectName("ChipWidget")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-
-        self.styles = styles or {
-            "background": "#1E1E1E",
-            "hover_background": "#2A2A2A",
-            "border": "1px solid #333333",
-            "hover_border": "1px solid #444444",
-            "text_color": "#FFFFFF",
-            "secondary_text_color": "#888888",
-            "radius": "4px",
-            "padding": "8px"
-        }
+        self.theme = theme
+        self.styles = THEMES[theme]["CHIP_WIDGET_STYLES"]
+        self.label_styles = THEMES[theme]["CHIP_LABEL_STYLES"]
+        self.strength_colors = THEMES[theme]["PASSWORD_STRENGTH_COLORS"]
 
         self.hovered = False
 
@@ -119,11 +103,8 @@ class ChipWidget(QWidget):
         # Логин как основной текст
         login = entry_data.get('login', '')
         login_label = QLabel(login)
-        login_label.setStyleSheet(f"""
-            color: {self.styles['text_color']};
-            font-size: 14px;
-            font-weight: bold;
-        """)
+        login_label.setProperty('class', 'loginLabel')
+        login_label.setStyleSheet(self.label_styles["login"])
 
         # Сервис и URL как дополнительная информация
         secondary_info = []
@@ -134,10 +115,8 @@ class ChipWidget(QWidget):
         
         if secondary_info:
             secondary_label = QLabel(" • ".join(secondary_info))
-            secondary_label.setStyleSheet(f"""
-                color: {self.styles['secondary_text_color']};
-                font-size: 12px;
-            """)
+            secondary_label.setProperty('class', 'secondaryLabel')
+            secondary_label.setStyleSheet(self.label_styles["secondary"])
             info_layout.addWidget(secondary_label)
 
         info_layout.addWidget(login_label)
@@ -160,15 +139,7 @@ class ChipWidget(QWidget):
         strength = password_strength(password)
         
         # Определяем цвет индикатора
-        colors = {
-            0: "rgba(229, 57, 53, 0.8)",      # Красный
-            1: "rgba(251, 140, 0, 0.8)",      # Оранжевый
-            2: "rgba(251, 192, 45, 0.8)",     # Желтый
-            3: "rgba(67, 160, 71, 0.8)",      # Зеленый
-            4: "rgba(46, 125, 50, 0.8)"       # Темно-зеленый
-        }
-        
-        color = colors.get(strength, colors[0])
+        color = self.strength_colors[strength]
         
         indicator.setStyleSheet(f"""
             QWidget {{
@@ -196,11 +167,24 @@ class ChipWidget(QWidget):
         border_color = QColor(self.styles['hover_border'] if self.hovered else self.styles['border'])
         
         # Рисуем фон
-        rect = self.rect()
-        painter.setPen(QPen(border_color, 1))
         painter.setBrush(QBrush(bg_color))
-        painter.drawRoundedRect(rect.adjusted(0, 0, -1, -1), 6, 6)
+        painter.setPen(QPen(border_color, 1))
+        painter.drawRoundedRect(self.rect(), 4, 4)
 
     def mousePressEvent(self, event):
-        print(f"ChipWidget clicked: {self.entry_data.get('service', 'unknown')}")  # Отладка
-        self.clicked.emit(self.entry_data) 
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit(self.entry_data)
+
+class PasswordWidget(QWidget):
+    def __init__(self, entry_data, parent=None):
+        super().__init__(parent)
+        
+        # Создаем метку для логина
+        login_label = QLabel(entry_data.get('login', ''))
+        login_label.setProperty('class', 'loginLabel')
+        
+        # Создаем метку для дополнительной информации
+        secondary_info = entry_data.get('email', '') or entry_data.get('phone', '')
+        if secondary_info:
+            secondary_label = QLabel(secondary_info)
+            secondary_label.setProperty('class', 'secondaryLabel') 

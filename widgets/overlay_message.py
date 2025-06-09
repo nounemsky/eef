@@ -1,13 +1,14 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication
 from PyQt6.QtCore import Qt, QTimer
-from styles import OVERLAY_MESSAGE_STYLES
+from styles.themes import THEMES
 
 class OverlayMessage(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, theme="default"):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self.theme = theme
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -16,12 +17,12 @@ class OverlayMessage(QWidget):
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         # Применяем базовый стиль
-        self.label.setStyleSheet(OVERLAY_MESSAGE_STYLES['base'] + OVERLAY_MESSAGE_STYLES['default'])
+        self.label.setStyleSheet(THEMES[self.theme]["OVERLAY_MESSAGE_STYLES"]["base"])
         layout.addWidget(self.label)
         
     def show_message(self, text, duration=2000, message_type='default'):
         # Комбинируем базовый стиль со стилем для конкретного типа сообщения
-        style = OVERLAY_MESSAGE_STYLES['base'] + OVERLAY_MESSAGE_STYLES.get(message_type, OVERLAY_MESSAGE_STYLES['default'])
+        style = THEMES[self.theme]["OVERLAY_MESSAGE_STYLES"][message_type]
         
         self.label.setStyleSheet(style)
         self.label.setText(text)
