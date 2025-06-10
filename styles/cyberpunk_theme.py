@@ -51,6 +51,7 @@ SEARCH_STYLES = """
 QLineEdit {
     color: yellow;
     background-color: #001417;
+    border-radius: 0px;
     border: 1px solid #02D7F2;
     padding: 3px 12px;
     font-size: 14px;
@@ -89,7 +90,6 @@ QLabel {
     border-radius: 2px;
     font-size: 11px;
     color: #00fff7;
-    text-shadow: 0 0 10px #00fff7;
     background-color: rgba(0, 255, 247, 0.1);
     border: 1px solid #00fff7;
 }
@@ -105,7 +105,6 @@ QLabel {
     color: #00fff7;
     font-size: 20px;
     font-weight: bold;
-    text-shadow: 0 0 10px #00fff7;
 }
 
 QLineEdit {
@@ -145,7 +144,6 @@ QLabel#titleLabel {
     font-size: 18px;
     font-weight: bold;
     color: #00fff7;
-    text-shadow: 0 0 10px #00fff7;
 }
 
 QPushButton#continue-btn {

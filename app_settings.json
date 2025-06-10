@@ -1,6 +1,6 @@
 {
     "appearance": {
-        "theme": "cyberpunk",
+        "theme": "default",
         "button_style": "macOS style"
     },
     "security": {

@@ -224,12 +224,10 @@ CHIP_LABEL_STYLES = {
             color: #00fff7;
             font-size: 14px;
             font-weight: bold;
-            text-shadow: 0 0 10px #00fff7;
         """,
         "secondary": """
             color: #ff00ea;
             font-size: 12px;
-            text-shadow: 0 0 8px #ff00ea;
         """
     }
 }
