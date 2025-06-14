@@ -120,12 +120,6 @@ QWidget {
     background-color: transparent;
 }
 
-QLabel {
-    color: #00fff7;
-    font-size: 20px;
-    font-weight: bold;
-}
-
 QLineEdit {
     background-color: #001417;
     color: white;
@@ -165,7 +159,6 @@ QLabel#titleLabel {
     font-size: 20px;
     font-weight: bold;
     color: #CDCDCD;
-    color: #00fff7;
 }
 
 QPushButton#continue-btn {
