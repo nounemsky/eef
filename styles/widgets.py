@@ -261,6 +261,8 @@ CHIP_LABEL_STYLES = {
             color: #00fff7;
             font-family: 'Rajdhani Regular';
             font-size: 14px;
+            color: #ff00ea;
+            font-size: 12px;
         """
     }
 }
