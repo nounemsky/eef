@@ -6,7 +6,6 @@ APP_STYLES = """
     background-color: rgba(20, 20, 20, 253);
     border-radius: 8px;
     border: 1px solid #3a3a3a;
-    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
 }
 
 #CentralWidget {
@@ -27,7 +26,24 @@ QLineEdit {
     border-radius: 4px; 
     padding: 5px;
 }
+QLineEdit#passwordInput {
+    color: white;
+    background-color: #2D2D2D;
+    border-radius: 4px;
+    border: 1px solid #404040;
+    padding: 3px 12px;
+    font-size: 14px;
+}
 
+QLineEdit#passwordInput:hover {
+    background-color: #383838;
+    border: 1px solid #505050;
+}
+
+QLineEdit#passwordInput:focus {
+    background-color: #2D2D2D;
+    border: 1px solid #ffffff;
+} 
 QListWidget, QComboBox {
     background-color: #3c3f41; 
     color: #ffffff;
@@ -43,19 +59,14 @@ QPushButton {
     padding: 8px 16px;
     border-radius: 4px;
     font-size: 14px;
-    transition: all 0.3s ease-in-out;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 QPushButton:hover {
     background-color: #2ecc71; 
-    transform: scale(1.05);
-    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
 }
 
 QPushButton:pressed {
     background-color: #27ae60; 
-    transform: scale(0.95);
 }
 
 QProgressBar {
@@ -199,4 +210,26 @@ QSpinBox::up-button, QSpinBox::down-button {
 QSpinBox::up-button:hover, QSpinBox::down-button:hover {
     background-color: #505050;
 }
-""" 
+"""
+
+# Стили для формы
+FORM_STYLES = """
+QGroupBox {
+    background-color: transparent;
+    border-radius: 0px;
+}
+
+QLabel {
+    color: #ffffff;
+    font-size: 14px;
+}
+
+QLabel[required="true"] {
+    color: #ffffff;
+}
+
+QLabel[required="true"]::after {
+    content: " *";
+    color: #ffffff;
+}
+"""

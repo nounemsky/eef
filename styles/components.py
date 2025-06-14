@@ -145,7 +145,7 @@ PANEL_STYLES = """
 
 #RightPanel {
     border-left: 1px solid #444;
-    border-top: 1px solid #444;
+    border-top: 1px solid #ffffff;
     background-color: transparent;
 }
 

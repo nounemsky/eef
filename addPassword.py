@@ -30,13 +30,62 @@ class AuthWidget(QWidget):
         super().__init__()
         if main_window is None:
             raise ValueError("main_window не может быть None")
-            
+
         self.is_first_launch = is_first_launch
         self.is_password_change = is_password_change
         self.main_window = main_window
         self._message_label = None
         self.current_theme = theme
+
+        # Определяем пути к иконкам в зависимости от темы
+        self.eye_open_icon = "styles/images/cyberpunk/eye1.png" if theme == "cyberpunk" else "icons/eye1.png"
+        self.eye_closed_icon = "styles/images/cyberpunk/eye2.png" if theme == "cyberpunk" else "icons/eye2.png"
+
         self.setStyleSheet(THEMES[self.current_theme]["AUTH_STYLES"])
+
+        # Определяем тексты в зависимости от темы
+        self.texts = {
+            "default": {
+                "welcome": "WELCOME!",
+                "change_creds": "Изменение учетных данных",
+                "username_placeholder": "Имя пользователя",
+                "pin_placeholder": "PIN",
+                "confirm_pin_placeholder": "Подтвердите PIN",
+                "continue_btn": "Continue",
+                "save_btn": "Сохранить",
+                "skip_btn": "skip",
+                "back_btn": "Назад",
+                "error_username": "Введите имя пользователя",
+                "error_pin": "Введите PIN-код",
+                "error_pin_length": "PIN-код должен содержать минимум 4 символа",
+                "error_pin_chars": "PIN-код должен содержать только буквы и цифры",
+                "error_pin_simple": "PIN-код слишком простой. Используйте разные цифры",
+                "error_pin_match": "PIN-коды не совпадают",
+                "error_user_exists": "Пользователь с таким именем уже существует"
+            },
+            "cyberpunk": {
+                "welcome": "WELCOME, CHOOMBA!",
+                "change_creds": "JACK IN TO CHANGE YOUR CREDS",
+                "username_placeholder": "NETRUNNER ID",
+                "pin_placeholder": "ACCESS CODE",
+                "confirm_pin_placeholder": "VERIFY ACCESS CODE",
+                "continue_btn": "CONNECT",
+                "save_btn": "UPLOAD NEW CREDS",
+                "skip_btn": "GHOST MODE",
+                "back_btn": "JACK OUT",
+                "error_username": "NETRUNNER ID REQUIRED, CHOOMBA!",
+                "error_pin": "ACCESS CODE MISSING - SECURITY BREACH IMMINENT!",
+                "error_pin_length": "ACCESS CODE TOO WEAK - MINIMUM 4 DIGITS REQUIRED!",
+                "error_pin_chars": "INVALID CODE FORMAT - USE ALPHANUMERIC ONLY!",
+                "error_pin_simple": "WEAK ACCESS CODE DETECTED - USE DIFFERENT DIGITS!",
+                "error_pin_match": "ACCESS CODES DON'T MATCH - CHECK YOUR DATA!",
+                "error_user_exists": "NETRUNNER ID ALREADY IN USE - CHOOSE ANOTHER!"
+            }
+        }
+
+        # Используем тексты по умолчанию, если тема не найдена
+        self.current_texts = self.texts.get(self.current_theme, self.texts["default"])
+
         self.init_ui(username)
 
     def init_ui(self, username):
@@ -57,7 +106,7 @@ class AuthWidget(QWidget):
         icon_path = f"styles/images/{self.current_theme}/login.png"
         print(f"Loading icon from: {icon_path}")  # Отладочный вывод
         print(f"Current theme: {self.current_theme}")  # Отладочный вывод
-        
+
         if os.path.exists(icon_path):
             print(f"Icon file exists at: {icon_path}")  # Отладочный вывод
             icon = QIcon(icon_path)
@@ -73,34 +122,33 @@ class AuthWidget(QWidget):
                 print(f"Failed to load icon: {icon_path}")
         else:
             print(f"Icon file not found at: {os.path.abspath(icon_path)}")  # Показываем полный путь
-            
+
         central_layout.addWidget(login_icon, alignment=Qt.AlignmentFlag.AlignCenter)
-        
+
         # Добавляем отступ после иконки
         central_layout.addItem(QSpacerItem(0, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
 
         # Заголовок
-        title = QLabel("WELCOME!")
+        self.title = QLabel(self.current_texts["welcome"])
         if self.is_password_change:
-            title.setText("Изменение учетных данных")
-        title.setObjectName("titleLabel")
-        title.setStyleSheet("font-size: 18px; font-weight: bold;")
-        central_layout.addWidget(title, alignment=Qt.AlignmentFlag.AlignCenter)
-        
+            self.title.setText(self.current_texts["change_creds"])
+        self.title.setObjectName("titleLabel")
+        central_layout.addWidget(self.title, alignment=Qt.AlignmentFlag.AlignCenter)
+
         # Добавляем отступ после заголовка
         central_layout.addItem(QSpacerItem(0, 25, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
 
         # Поле для имени пользователя
         self.username_input = QLineEdit(username)
-        self.username_input.setPlaceholderText("Имя пользователя")
+        self.username_input.setPlaceholderText(self.current_texts["username_placeholder"])
         central_layout.addWidget(self.username_input)
-        
+
         # Фиксированный отступ между полями
         central_layout.addItem(QSpacerItem(0, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
 
         # PIN-код
         self.pin_input = QLineEdit()
-        self.pin_input.setPlaceholderText("PIN")
+        self.pin_input.setPlaceholderText(self.current_texts["pin_placeholder"])
         self.pin_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.pin_input.setStyleSheet("""
             QLineEdit {
@@ -111,7 +159,7 @@ class AuthWidget(QWidget):
 
         # Кнопка видимости PIN
         self.toggle_pin_btn = QToolButton(self.pin_input)
-        self.toggle_pin_btn.setIcon(QIcon("icons/eye2.png"))
+        self.toggle_pin_btn.setIcon(QIcon(self.eye_closed_icon))
         self.toggle_pin_btn.setIconSize(QSize(24, 24))
         self.toggle_pin_btn.setStyleSheet("""
             QToolButton {
@@ -132,14 +180,15 @@ class AuthWidget(QWidget):
                 self.pin_input.width() - 30,
                 (self.pin_input.height() - 20) // 2
             )
+
         self.pin_input.resizeEvent = lambda e: position_pin_button()
 
         # Подтверждение PIN-кода (только при первом запуске или смене пароля)
         if self.is_first_launch or self.is_password_change:
             central_layout.addItem(QSpacerItem(0, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed))
-            
+
             self.confirm_pin_input = QLineEdit()
-            self.confirm_pin_input.setPlaceholderText("Подтвердите PIN")
+            self.confirm_pin_input.setPlaceholderText(self.current_texts["confirm_pin_placeholder"])
             self.confirm_pin_input.setEchoMode(QLineEdit.EchoMode.Password)
             self.confirm_pin_input.setStyleSheet("""
                 QLineEdit {
@@ -158,22 +207,22 @@ class AuthWidget(QWidget):
         button_layout.setSpacing(10)
 
         # Кнопка продолжения
-        self.continue_btn = ContinueButton("Continue", theme=self.current_theme)
+        self.continue_btn = ContinueButton(self.current_texts["continue_btn"], theme=self.current_theme)
         self.continue_btn.setObjectName("continue-btn")
         if self.is_password_change:
-            self.continue_btn.setText("Сохранить")
+            self.continue_btn.setText(self.current_texts["save_btn"])
         self.continue_btn.clicked.connect(self.validate_and_accept)
         button_layout.addWidget(self.continue_btn)
 
         # Кнопка "Skip" только при первом запуске
         if self.is_first_launch:
-            self.skip_btn = SkipButton("skip", theme=self.current_theme)
+            self.skip_btn = SkipButton(self.current_texts["skip_btn"], theme=self.current_theme)
             self.skip_btn.clicked.connect(self.skip_auth)
             button_layout.addWidget(self.skip_btn)
 
         # Кнопка "Back" при смене пароля
         if self.is_password_change:
-            self.back_btn = SkipButton("Назад", theme=self.current_theme)
+            self.back_btn = SkipButton(self.current_texts["back_btn"], theme=self.current_theme)
             self.back_btn.clicked.connect(self.go_back)
             button_layout.addWidget(self.back_btn)
 
@@ -225,32 +274,32 @@ class AuthWidget(QWidget):
         pin = self.pin_input.text().strip()
 
         if not username:
-            self.show_error("Введите имя пользователя")
+            self.show_error(self.current_texts["error_username"])
             return
 
         if not pin:
-            self.show_error("Введите PIN-код")
+            self.show_error(self.current_texts["error_pin"])
             return
 
         # Проверка длины PIN-кода
         if len(pin) < 4:
-            self.show_error("PIN-код должен содержать минимум 4 символа")
+            self.show_error(self.current_texts["error_pin_length"])
             return
-            
+
         # Проверка на допустимые символы
         if not pin.isalnum():
-            self.show_error("PIN-код должен содержать только буквы и цифры")
+            self.show_error(self.current_texts["error_pin_chars"])
             return
-            
+
         # Проверка на сложность PIN-кода
         if pin.isdigit() and len(set(pin)) < 3:
-            self.show_error("PIN-код слишком простой. Используйте разные цифры")
+            self.show_error(self.current_texts["error_pin_simple"])
             return
 
         if hasattr(self, 'confirm_pin_input'):
             confirm_pin = self.confirm_pin_input.text().strip()
             if pin != confirm_pin:
-                self.show_error("PIN-коды не совпадают")
+                self.show_error(self.current_texts["error_pin_match"])
                 return
 
         try:
@@ -259,7 +308,7 @@ class AuthWidget(QWidget):
                 old_username = self.main_window.user_credentials.get_saved_username()
                 if username != old_username:
                     if PasswordManager.vault_exists(username):
-                        self.main_window.show_temporary_message("Пользователь с таким именем уже существует")
+                        self.main_window.show_temporary_message(self.current_texts["error_user_exists"])
                         return
 
                 # Очищаем старые учетные данные перед сменой пароля
@@ -268,7 +317,7 @@ class AuthWidget(QWidget):
                 # Меняем пароль в менеджере
                 if not self.main_window.password_manager.change_password(pin):
                     raise Exception("Ошибка при смене пароля")
-                    
+
                 # Если имя пользователя изменилось, меняем его
                 if old_username != username:
                     if not self.main_window.password_manager.change_username(username):
@@ -278,22 +327,20 @@ class AuthWidget(QWidget):
                 # Проверяем, существует ли уже хранилище с таким именем
                 if PasswordManager.vault_exists(username):
                     # Проверяем учетные данные
-                    if self.main_window.user_credentials.verify_credentials(username, pin):
-                        # Если учетные данные верны, создаем менеджер паролей
-                        self.main_window.password_manager = PasswordManager(username, pin)
-                    else:
-                        # Если пароль неверный, показываем уведомление
-                        self.main_window.show_temporary_message("Неверный PIN-код")
+                    if not self.main_window.user_credentials.verify_credentials(username, pin):
+                        self.show_error("Неверный PIN-код")
                         return
+                    # Если учетные данные верны, создаем менеджер паролей
+                    self.main_window.password_manager = PasswordManager(username, pin)
                 else:
                     # Сохраняем учетные данные
                     self.main_window.user_credentials.save_credentials(username, pin)
                     # Создаем менеджер паролей
                     self.main_window.password_manager = PasswordManager(username, pin)
-                
+
             # Эмитим сигнал успешной регистрации/изменения
             self.accepted.emit()
-            
+
         except Exception as e:
             self.show_error(f"Ошибка: {str(e)}")
             return
@@ -336,76 +383,88 @@ class AuthWidget(QWidget):
         # Скрываем сообщение через duration миллисекунд
         QTimer.singleShot(duration, self._message_label.hide)
 
-    def save_password(self):
-        """Сохраняет новый пароль или обновляет существующий"""
-        service = self.service_input.text().strip()
-        login = self.login_input.text().strip()
-        password = self.password_input.text().strip()
-        url = self.url_input.text().strip()
-        email = self.email_input.text().strip()
-        phone = self.phone_input.text().strip()
-        notes = self.notes_input.toPlainText().strip()
-
-        try:
-            # Только заполненные поля попадут в kwargs
-            kwargs = {}
-            if url: kwargs["url"] = url
-            if email: kwargs["email"] = email
-            if phone: kwargs["phone"] = phone
-            if notes: kwargs["notes"] = notes
-
-            self.password_manager.save_password(
-                service=service,
-                password=password,
-                login=login,
-                **kwargs
-            )
-            self.passwords = self.password_manager.passwords
-            self.update_list()
-            self.clear_fields()
-            self.show_validation_error("Пароль успешно сохранен", duration=2000)
-        except ValueError as e:
-            # Показываем ошибку валидации
-            self.show_validation_error(str(e))
-        except Exception as e:
-            error_msg = f"Ошибка сохранения: {str(e)}"
-            print(error_msg)
-            QMessageBox.critical(self, "Ошибка", error_msg)
-
     def toggle_password_visibility(self, input_field):
         """Переключает видимость пароля в полях ввода PIN-кода"""
         is_password_visible = input_field.echoMode() == QLineEdit.EchoMode.Password
         new_mode = QLineEdit.EchoMode.Normal if is_password_visible else QLineEdit.EchoMode.Password
-        new_icon = QIcon("icons/eye1.png") if is_password_visible else QIcon("icons/eye2.png")
-        
+        new_icon = QIcon(self.eye_open_icon if is_password_visible else self.eye_closed_icon)
+
         # Изменяем режим отображения для обоих полей
         self.pin_input.setEchoMode(new_mode)
         if hasattr(self, 'confirm_pin_input'):
             self.confirm_pin_input.setEchoMode(new_mode)
-        
+
         # Обновляем иконку
         self.toggle_pin_btn.setIcon(new_icon)
 
     def update_theme(self, new_theme):
-        """Обновляет тему виджета"""
+        """Обновляет тему виджета и все связанные тексты"""
         self.current_theme = new_theme
         self.setStyleSheet(THEMES[self.current_theme]["AUTH_STYLES"])
-        
+
+        # Обновляем пути к иконкам
+        self.eye_open_icon = "styles/images/cyberpunk/eye1.png" if new_theme == "cyberpunk" else "icons/eye1.png"
+        self.eye_closed_icon = "styles/images/cyberpunk/eye2.png" if new_theme == "cyberpunk" else "icons/eye2.png"
+
+        # Обновляем иконку в соответствии с текущим состоянием
+        is_password_visible = self.pin_input.echoMode() == QLineEdit.EchoMode.Normal
+        new_icon = QIcon(self.eye_open_icon if is_password_visible else self.eye_closed_icon)
+        self.toggle_pin_btn.setIcon(new_icon)
+
+        # Обновляем тексты
+        self.current_texts = self.texts.get(self.current_theme, self.texts["default"])
+
+        # Обновляем все тексты в интерфейсе
+        if hasattr(self, 'title'):
+            if self.is_password_change:
+                self.title.setText(self.current_texts["change_creds"])
+            else:
+                self.title.setText(self.current_texts["welcome"])
+
+        if hasattr(self, 'username_input'):
+            self.username_input.setPlaceholderText(self.current_texts["username_placeholder"])
+
+        if hasattr(self, 'pin_input'):
+            self.pin_input.setPlaceholderText(self.current_texts["pin_placeholder"])
+
+        if hasattr(self, 'confirm_pin_input'):
+            self.confirm_pin_input.setPlaceholderText(self.current_texts["confirm_pin_placeholder"])
+
+        if hasattr(self, 'continue_btn'):
+            if self.is_password_change:
+                self.continue_btn.setText(self.current_texts["save_btn"])
+            else:
+                self.continue_btn.setText(self.current_texts["continue_btn"])
+
+        if hasattr(self, 'skip_btn'):
+            self.skip_btn.setText(self.current_texts["skip_btn"])
+
+        if hasattr(self, 'back_btn'):
+            self.back_btn.setText(self.current_texts["back_btn"])
+
         # Обновляем иконку входа
         icon_path = f"styles/images/{self.current_theme}/login.png"
         print(f"Updating icon to: {icon_path}")  # Отладочный вывод
-        
+
         if os.path.exists(icon_path):
             icon = QIcon(icon_path)
             if not icon.isNull():
-                pixmap = icon.pixmap(QSize(64, 64))
+                # Определяем размер иконки в зависимости от темы
+                if new_theme == "cyberpunk":
+                    size = QSize(80, 80)  # Меньший размер для киберпанк темы
+                else:
+                    size = QSize(64, 64)  # Стандартный размер для других тем
+
+                pixmap = icon.pixmap(size)
                 if not pixmap.isNull():
                     # Находим QLabel с иконкой
                     for child in self.findChildren(QLabel):
                         if child.pixmap() is not None:
                             child.setPixmap(pixmap)
+                            # Устанавливаем фиксированный размер
+                            child.setFixedSize(size)
                             break
-        
+
         # Обновляем стили кнопок
         if hasattr(self, 'skip_btn'):
             self.skip_btn.setStyleSheet(THEMES[self.current_theme]["SKIP_BUTTON_STYLES"])

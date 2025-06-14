@@ -87,7 +87,7 @@ ADD_BUTTON_STYLES = """
         color: white;
         border: none;
         border-radius: 10px;
-        font-size: 24px;
+        font-size: 12px;
         font-weight: bold;
     }
     QPushButton:hover {
@@ -127,26 +127,57 @@ CONTINUE_BUTTON_STYLES = """
 
 # Стили для чипов
 CHIP_WIDGET_STYLES = {
-    "default": {
-        "background": "#1E1E1E",
-        "hover_background": "#2A2A2A",
-        "border": "1px solid #333333",
-        "hover_border": "1px solid #444444",
-        "text_color": "#FFFFFF",
-        "secondary_text_color": "#888888",
-        "radius": "4px",
-        "padding": "8px"
-    },
-    "cyberpunk": {
-        "background": "#0f0026",
-        "hover_background": "#1a0040",
-        "border": "1px solid #ff00ea",
-        "hover_border": "1px solid #00fff7",
-        "text_color": "#00fff7",
-        "secondary_text_color": "#ff00ea",
-        "radius": "4px",
-        "padding": "8px"
-    }
+    "default": """
+        QWidget#ChipWidget {
+            background: #404040;
+            border: 1px solid #333333;
+            border-radius: 4px;
+            padding: 50px;
+        }
+        QWidget#ChipWidget:hover {
+            background: #2A2A2A;
+            border: 1px solid #444444;
+        }
+        QWidget#ChipWidget[selected="true"] {
+            background: #2A2A2A;
+            border: 1px solid #444444;
+        }
+        QWidget#ChipWidget QLabel {
+            color: #FFFFFF;
+            font-size: 14px;
+        }
+        QWidget#ChipWidget QLabel[secondaryLabel="true"] {
+            color: #888888;
+            font-size: 12px;
+        }
+    """,
+
+    "cyberpunk": """
+        QWidget#ChipWidget {
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/CHIP.png");
+            background-repeat: no-repeat;
+            background-position: right center;
+            border: none;
+            border-radius: 0px;
+            padding: 8px;
+        }
+        QWidget#ChipWidget:hover {
+            background-image: url("styles/images/cyberpunk/CHIPHOVER.png");
+
+        }
+        QWidget#ChipWidget[selected="true"] {
+            background-image: url("styles/images/cyberpunk/CHIPPRESSED.png");
+        }
+        QWidget#ChipWidget QLabel {
+            color: #FFFFFF;
+            font-size: 14px;
+        }
+        QWidget#ChipWidget QLabel[secondaryLabel="true"] {
+            color: #FFFFFF;
+            font-size: 12px;
+        }
+    """
 }
 
 # Стили для контейнера тегов
@@ -221,15 +252,15 @@ CHIP_LABEL_STYLES = {
     },
     "cyberpunk": {
         "login": """
-            color: #00fff7;
+            color: #FFFFFF;
             font-size: 14px;
+            font-family: 'Orbitron';
             font-weight: bold;
-            text-shadow: 0 0 10px #00fff7;
         """,
         "secondary": """
-            color: #ff00ea;
-            font-size: 12px;
-            text-shadow: 0 0 8px #ff00ea;
+            color: #00fff7;
+            font-family: 'Rajdhani Regular';
+            font-size: 14px;
         """
     }
 }

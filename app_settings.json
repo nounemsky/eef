@@ -1,17 +1,22 @@
 {
     "appearance": {
-        "theme": "cyberpunk",
+        "theme": "default",
         "button_style": "macOS style"
     },
     "security": {
-        "autolock_minutes": 15.0
+        "autolock_minutes": 15.0,
+        "min_password_length": 8,
+        "require_special_chars": true,
+        "backup_count": 5
     },
     "interface": {
         "language": "ru",
-        "show_password_strength": true
+        "show_password_strength": true,
+        "show_favicons": true,
+        "compact_mode": false
     },
     "version": {
-        "current": "1.0.0",
-        "last_check": null
+        "current": "1.0.1",
+        "last_check": "2025-06-13T00:46:48.782314"
     }
 }

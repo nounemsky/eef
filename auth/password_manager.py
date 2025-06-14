@@ -39,18 +39,20 @@ class PasswordManager:
 
     def _ensure_vault_dir_exists(self):
         """Создает директорию для хранилища если она не существует"""
-        if not os.path.exists(self.VAULT_DIR):
-            try:
-                os.makedirs(self.VAULT_DIR)
-                # На Windows устанавливаем права через icacls
-                if os.name == 'nt':
-                    os.system(f'icacls "{self.VAULT_DIR}" /grant:r "%USERNAME%":(OI)(CI)F /T')
-                else:
-                    os.chmod(self.VAULT_DIR, 0o700)
-            except Exception as e:
-                print(f"Ошибка создания директории хранилища: {str(e)}")
-                # Создаем директорию без специальных прав
+        try:
+            if not os.path.exists(self.VAULT_DIR):
                 os.makedirs(self.VAULT_DIR, exist_ok=True)
+                # Проверяем, что директория создана и доступна для записи
+                test_file = os.path.join(self.VAULT_DIR, '.test')
+                try:
+                    with open(test_file, 'w') as f:
+                        f.write('test')
+                    os.remove(test_file)
+                except Exception as e:
+                    print(f"Предупреждение: директория создана, но может быть недоступна для записи: {str(e)}")
+        except Exception as e:
+            print(f"Ошибка создания директории хранилища: {str(e)}")
+            raise ValueError("Не удалось создать директорию хранилища. Проверьте права доступа к папке.")
 
     def _load_data(self):
         """Загружает данные из хранилища"""
@@ -79,7 +81,9 @@ class PasswordManager:
                 
             return True
         except Exception as e:
+            import traceback
             print(f"Ошибка сохранения данных: {str(e)}")
+            traceback.print_exc()
             return False
 
     def save_password(self, service: str, password: str, category: str = "Без категории", **kwargs) -> bool:

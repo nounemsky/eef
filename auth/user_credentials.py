@@ -12,7 +12,28 @@ class UserCredentials:
             "app_cache",
             "credentials.json"
         )
-        os.makedirs(os.path.dirname(self.credentials_file), exist_ok=True)
+        try:
+            cache_dir = os.path.dirname(self.credentials_file)
+            if not os.path.exists(cache_dir):
+                os.makedirs(cache_dir, exist_ok=True)
+                
+            # Проверяем доступность директории для записи
+            test_file = os.path.join(cache_dir, '.test')
+            try:
+                with open(test_file, 'w') as f:
+                    f.write('test')
+                os.remove(test_file)
+            except Exception as e:
+                print(f"Предупреждение: директория app_cache может быть недоступна для записи: {str(e)}")
+                
+            # Создаем файл credentials.json если его нет
+            if not os.path.exists(self.credentials_file):
+                with open(self.credentials_file, 'w') as f:
+                    json.dump({"credentials": []}, f)
+                    
+        except Exception as e:
+            print(f"Ошибка инициализации хранилища учетных данных: {str(e)}")
+            raise ValueError("Не удалось инициализировать хранилище учетных данных. Проверьте права доступа к папке app_cache.")
 
     def _hash_pin(self, pin: str) -> str:
         """Хеширует PIN-код"""
@@ -23,16 +44,20 @@ class UserCredentials:
 
     def save_credentials(self, username: str, pin: str) -> None:
         """Сохраняет учетные данные"""
+        if not username or not pin:
+            raise ValueError("Имя пользователя и PIN-код обязательны")
+            
         try:
             # Загружаем существующие данные
+            data = {"credentials": []}
             if os.path.exists(self.credentials_file):
-                with open(self.credentials_file, 'r') as f:
-                    try:
+                try:
+                    with open(self.credentials_file, 'r') as f:
                         data = json.load(f)
-                    except json.JSONDecodeError:
-                        data = {"credentials": []}
-            else:
-                data = {"credentials": []}
+                except (json.JSONDecodeError, IOError) as e:
+                    print(f"Ошибка чтения файла учетных данных: {str(e)}")
+                    # Если файл поврежден, создаем новый
+                    data = {"credentials": []}
 
             # Хешируем PIN
             hashed_pin = self._hash_pin(pin)
@@ -46,7 +71,7 @@ class UserCredentials:
             }
             
             # Обновляем или добавляем учетные данные
-            credentials_list = data["credentials"]
+            credentials_list = data.get("credentials", [])
             updated = False
             
             for cred in credentials_list:
@@ -59,12 +84,25 @@ class UserCredentials:
                 credentials_list.append(new_credentials)
             
             # Сохраняем обновленные данные
-            with open(self.credentials_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            try:
+                # Сначала пишем во временный файл
+                temp_file = f"{self.credentials_file}.tmp"
+                with open(temp_file, 'w') as f:
+                    json.dump(data, f, indent=2)
+                # Если запись прошла успешно, заменяем основной файл
+                os.replace(temp_file, self.credentials_file)
+            except Exception as e:
+                print(f"Ошибка сохранения учетных данных: {str(e)}")
+                if os.path.exists(temp_file):
+                    try:
+                        os.remove(temp_file)
+                    except:
+                        pass
+                raise ValueError("Не удалось сохранить учетные данные")
                 
         except Exception as e:
             print(f"Ошибка сохранения учетных данных: {str(e)}")
-            raise
+            raise ValueError(f"Не удалось сохранить учетные данные: {str(e)}")
 
     def verify_credentials(self, username: str, pin: str) -> bool:
         """Проверяет учетные данные"""

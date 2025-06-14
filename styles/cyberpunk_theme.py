@@ -7,13 +7,18 @@ APP_STYLES = """
     background-image: url("styles/images/cyberpunk/background.png");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: cover;
     border: 1px solid #000000;
 }
-
-QWidget {
+#CentralWidget {
     background-color: transparent;
+    border-top: 1px solid #F75049;
+    border-radius: 0px;
+}
+
+QLabel {
     color: #00fff7;
+    font-family: 'Rajdhani Regular';
+    font-size: 14px;
 }
 
 QPushButton {
@@ -22,6 +27,7 @@ QPushButton {
     border: 1px solid #ff00ea;
     border-radius: 4px;
     padding: 5px 10px;
+    font-family: 'Rajdhani Regular';
 }
 
 QPushButton:hover {
@@ -34,15 +40,21 @@ QPushButton:pressed {
 }
 
 QLineEdit {
-    background-color: #1a0040;
-    color: #00fff7;
-    border: 1px solid #ff00ea;
-    border-radius: 4px;
-    padding: 5px;
+    color: white;
+    background-color: #001417;
+    border-radius: 0px;
+    border: 1px solid #02D7F2;
+    padding: 3px 6px;
+    font-size: 14px;
+}
+QLineEdit:hover {
+    background-color: #002A30;
+    border: 1px solid #02D7F2;
 }
 
 QLineEdit:focus {
-    border: 1px solid #00fff7;
+    background-color: #001417;
+    border: 1px solid #ffffff;
 }
 """
 
@@ -51,10 +63,10 @@ SEARCH_STYLES = """
 QLineEdit {
     color: yellow;
     background-color: #001417;
+    border-radius: 0px;
     border: 1px solid #02D7F2;
     padding: 3px 12px;
     font-size: 14px;
-    min-width: 250px;
 }
 
 QLineEdit:hover {
@@ -71,14 +83,22 @@ QLineEdit:focus {
 # Стили для заметок
 NOTES_STYLES = """
 QTextEdit {
-    background-color: #1a0040;
-    border: 1px solid #ff00ea;
-    border-radius: 5px;
+    background-color: #001417;
+    border: 1px solid #00fff7;
+    border-radius: 0px;
     padding: 5px;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: 'Rajdhani';
     font-size: 14px;
-    color: #00fff7;
-    text-shadow: 0 0 10px #00fff7;
+    color: white;
+}
+QTextEdit:hover {
+    background-color: #002A30;
+    border: 1px solid #02D7F2;
+}
+
+QTextEdit:focus {
+    background-color: #001417;
+    border: 1px solid #ffffff;
 }
 """
 
@@ -89,7 +109,6 @@ QLabel {
     border-radius: 2px;
     font-size: 11px;
     color: #00fff7;
-    text-shadow: 0 0 10px #00fff7;
     background-color: rgba(0, 255, 247, 0.1);
     border: 1px solid #00fff7;
 }
@@ -101,20 +120,14 @@ QWidget {
     background-color: transparent;
 }
 
-QLabel {
-    color: #00fff7;
-    font-size: 20px;
-    font-weight: bold;
-    text-shadow: 0 0 10px #00fff7;
-}
-
 QLineEdit {
     background-color: #001417;
     color: white;
     border: 1px solid #02D7F2;
     border-radius: 0px;
-    padding: 6px 10px;
-    font-size: 13px;
+    padding: 6px 6px;
+    font-family: 'Rajdhani Medium';
+    font-size: 14px;
     min-height: 20px;
 }
 
@@ -142,17 +155,16 @@ QLabel#messageLabel {
 }
 
 QLabel#titleLabel {
-    font-size: 18px;
+    font-family: 'Orbitron';
+    font-size: 20px;
     font-weight: bold;
-    color: #00fff7;
-    text-shadow: 0 0 10px #00fff7;
+    color: #CDCDCD;
 }
 
 QPushButton#continue-btn {
-    background-image: url("styles/images/cyberpunk/normal.png");
+    background-image: url("styles/images/cyberpunk/CONNECT.png");
     background-repeat: no-repeat;
     background-position: left center;
-    background-size: contain;
     border: none;
     border-radius: 0px;
     min-width: 250px;
@@ -163,12 +175,12 @@ QPushButton#continue-btn {
 }
 
 QPushButton#continue-btn:hover {
-    background-image: url("styles/images/cyberpunk/hover.png");
+    background-image: url("styles/images/cyberpunk/CONNECTHOVER.png");
     border: none;
 }
 
 QPushButton#continue-btn:pressed {
-    background-image: url("styles/images/cyberpunk/pressed.png");
+    background-image: url("styles/images/cyberpunk/CONNECTPRESSED.png");
     border: none;
 }
 """
@@ -193,7 +205,7 @@ QGroupBox::title {
     text-shadow: 0 0 10px #00fff7;
 }
 QLabel {
-    color: #00fff7;
+    color: #02D7F2;
     text-shadow: 0 0 10px #00fff7;
 }
 QRadioButton {
@@ -235,37 +247,37 @@ WINDOW_CONTROL_STYLES = """
 }
 
 #closeButton {
-    background-color: #000000;
-    border: 1px solid #F75049;
+    background-color: #2D0008;
+    border: 1px solid #00F0FF;
 }
 
 #closeButton:hover {
-    background-color: #ffffff;
+    background-color: #000000;
     border: 1px solid #F75049;
 }
 
 #minimizeButton {
-    background-color: #000000;
-    border: 1px solid #F75049;
+    background-color: #2D0008;
+    border: 1px solid #00F0FF;
 }
 
 #minimizeButton:hover {
-    background-color: #ffffff;
+    background-color: #000000;
     border: 1px solid #F75049;
 }
 
 #maximizeButton {
+    background-color: #2D0008;
+    border: 1px solid #00F0FF;
+}
+
+#maximizeButton:hover {
     background-color: #000000;
     border: 1px solid #F75049;
 }
 
-#maximizeButton:hover {
-    background-color: #ffffff;
-    border: 1px solid #F75049;
-}
-
 QPushButton.windowButton {
-    background-color: transparent;
+    background-color: #ffffff;
     color: #00fff7;
     border-left: 1px solid #ff00ea;
     font-size: 20px;
@@ -306,12 +318,12 @@ QListWidget::item:hover {
 # Стили для панелей
 PANEL_STYLES = """
 QWidget#LeftPanel, QWidget#RightPanel {
-    border: 1px solid #ff00ea;
-    background-color: #0f0026;
+    border: 1px solid #F75049;
+    background-color: transperent;
 }
 
 QSplitter::handle {
-    background: #ff00ea;
+    background: #F75049;
     width: 1px;
     height: 1px;
 }
@@ -340,9 +352,10 @@ QScrollArea {
 }
 
 QWidget#TagsInnerContainer {
-    background-color: #1a0040;
+    background-color: transparent;
     border-radius: 0px;
     padding: 5px;
+    border: 0p;
 }
 """
 
@@ -404,27 +417,6 @@ OVERLAY_MESSAGE_STYLES = {
     """
 }
 
-CHIP_STYLES = {
-    'default': """
-        QWidget#ChipWidget {
-            background-color: #0f0026;
-            border-top: 0px;
-            border-right: 0px;
-            border-bottom: 1px solid #00fff7;
-            padding: 10px;
-        }
-    """,
-    'hover': """
-        QWidget#ChipWidget {
-            background-color: #1a0033;
-            border-top: 0px;
-            border-right: 0px;
-            border-bottom: 1px solid #ff00ea;
-            padding: 10px;
-        }
-    """
-}
-
 PASSWORD_STATUS_WIDGET_STYLES = {
     'base': """
         QLabel {
@@ -459,38 +451,37 @@ PASSWORD_STATUS_WIDGET_STYLES = {
 SKIP_BUTTON_STYLES = """
     QPushButton {
         background-color: transparent;
-        color: #F75049;
+        color: #CDCDCD;
         border: none;
         padding: 4px 8px;
-        font-size: 14px;
+        font-size: 12px;
         text-decoration: underline;
     }
     QPushButton:hover {
-        color: #ff00ea;
-        text-shadow: 0 0 10px #ff00ea;
+        color: #CDCDCD;
     }
     QPushButton:pressed {
-        color: #ff0055;
-        text-shadow: 0 0 10px #ff0055;
+        color: #F75049;
     }
 """
 
 ADD_BUTTON_STYLES = """
     QPushButton {
-        background-color: rgba(0, 0, 0, 200);
-        color: #F75049;
-        border: 1px solid #F75049;
-        border-radius: 0px;
-        font-size: 24px;
+        background-color: transparent;
+        background-image: url("styles/images/cyberpunk/ADD.png");
+        background-repeat: no-repeat;
+        background-position: right center;
+        border: none;
         font-weight: bold;
+        font-size: 14px;
+        font-family: 'Regular';
+        border-radius: 0px;
     }
     QPushButton:hover {
-        background-color: #00fff7;
-        color: white;
+        background-image: url("styles/images/cyberpunk/ADDHOVER.png");
     }
     QPushButton:pressed {
-        background-color: #F75049;
-        color: white;
+        background-image: url("styles/images/cyberpunk/ADDPRESSED.png");
     }
 """
 
@@ -671,5 +662,32 @@ LAZY_ICON_STYLES = """
 QLabel {
     background-color: transparent;
     border: none;
+}
+"""
+
+# Стили для формы
+FORM_STYLES = """
+QGroupBox {
+    background-color: transparent;
+    border-radius: 0px;
+}
+
+QLabel {
+    color: #FCEE09;
+    font-family: 'Rajdhani Regular';
+    font-size: 16px;
+}
+
+QLabel[required="true"] {
+    color: #FCEE09;
+    font-family: 'Rajdhani Regular';
+    font-size: 16px;
+}
+
+QLabel[required="true"]::after {
+    content: " *";
+    color: #FCEE09;
+    font-family: 'Rajdhani Regular';
+    font-size: 16px;
 }
 """

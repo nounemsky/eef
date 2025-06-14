@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QSplitter, QLayout, QLayoutItem, QSizePolicy, QScrollArea, QToolButton, QRadioButton, QSpacerItem, QTreeWidget, QListWidgetItem,
     QApplication
 )
-from PyQt6.QtGui import QMouseEvent, QPixmap, QDrag, QColor, QPainter, QPen, QBrush, QIcon
+from PyQt6.QtGui import QMouseEvent, QPixmap, QDrag, QColor, QPainter, QPen, QBrush, QIcon, QFontDatabase
 from PyQt6.QtCore import (
     Qt, QPoint, QMimeData, pyqtSignal, QRect, QSize, QTimer,
     QPropertyAnimation, QEasingCurve, pyqtProperty, QEvent, QProcess
@@ -19,10 +19,8 @@ from password_generator import PasswordGeneratorDialog
 from auth.password_manager import PasswordManager
 from auth.user_credentials import UserCredentials
 from addPassword import AuthWidget
-from styles import APP_STYLES, SEARCH_STYLES, NOTES_STYLES, WINDOW_CONTROL_STYLES, SETTINGS_GROUPBOX_STYLES
 from utils.url_utils import extract_domain
 from utils.hash_utils import md5_hash
-from utils.password_utils import password_strength
 import requests
 import time
 from widgets.animated_stack import AnimatedStackedWidget
@@ -35,9 +33,7 @@ from widgets.password_widgets import TagsContainer, ChipWidget
 from widgets.animated_panel import AnimatedPanel
 from widgets.overlay_message import OverlayMessage
 from styles.themes import THEMES
-from styles.base import APP_STYLES, SEARCH_STYLES, NOTES_STYLES
-from styles.components import WINDOW_CONTROL_STYLES, PANEL_STYLES, WINDOW_BUTTON_STYLES
-from styles.widgets import ADD_BUTTON_STYLES
+
 
 class VerticalFlowLayout(QLayout):
     def __init__(self, parent=None, margin=0, spacing=0, column_count=1):
@@ -102,7 +98,6 @@ class PasswordManagerUI(QMainWindow):
         super().__init__()
         self.current_theme = "default"
         self.theme_styles = THEMES[self.current_theme]
-        self.styles = self.theme_styles["APP_STYLES"]
         self.window_control_styles = self.theme_styles["WINDOW_CONTROL_STYLES"]
         self.password_manager = None
         self.passwords = []
@@ -138,6 +133,10 @@ class PasswordManagerUI(QMainWindow):
         # Инициализация оверлея для сообщений
         self.overlay_message = OverlayMessage(self)
 
+        # Определяем пути к иконкам в зависимости от темы
+        self.eye_open_icon = "styles/images/cyberpunk/eye1.png" if self.current_theme == "cyberpunk" else "icons/eye1.png"
+        self.eye_closed_icon = "styles/images/cyberpunk/eye2.png" if self.current_theme == "cyberpunk" else "icons/eye2.png"
+
         self.init_ui()
         self.init_auth_widget()
         self.connect_signals()
@@ -159,23 +158,74 @@ class PasswordManagerUI(QMainWindow):
             
         self.current_theme = theme_key
         self.theme_styles = THEMES[theme_key]
-        self.styles = self.theme_styles["APP_STYLES"]
-        self.window_control_styles = self.theme_styles["WINDOW_CONTROL_STYLES"]
         
-        # Применяем стили к основным элементам
-        if hasattr(self, 'tags_container'):
-            print("Applying theme to tags_container:", theme_key)
-            print("Theme styles for tags:", self.theme_styles["TAGS_CONTAINER_STYLES"])
-            self.tags_container.setStyleSheet(self.theme_styles["TAGS_CONTAINER_STYLES"])
-            # Обновляем стили всех ChipWidget
-            if hasattr(self.tags_container, 'update_chip_styles'):
-                chip_styles = self.theme_styles["CHIP_STYLES"]
-                if isinstance(chip_styles, dict) and 'default' in chip_styles:
-                    self.tags_container.update_chip_styles(chip_styles['default'])
-        if hasattr(self, 'center_panel'):
-            self.center_panel.setStyleSheet(self.theme_styles.get("PANEL_STYLES", "background: transparent;"))
+        # Обновляем пути к иконкам
+        self.eye_open_icon = "styles/images/cyberpunk/eye1.png" if theme_key == "cyberpunk" else "icons/eye1.png"
+        self.eye_closed_icon = "styles/images/cyberpunk/eye2.png" if theme_key == "cyberpunk" else "icons/eye2.png"
+        
+        # Обновляем иконку в соответствии с текущим состоянием
+        if hasattr(self, 'toggle_btn'):
+            is_password_visible = self.password_input.echoMode() == QLineEdit.EchoMode.Normal
+            new_icon = QIcon(self.eye_open_icon if is_password_visible else self.eye_closed_icon)
+            self.toggle_btn.setIcon(new_icon)
+        
+                # Обновляем стили поля ввода пароля
+        if hasattr(self, 'password_input'):
+            if theme_key == "cyberpunk":
+                self.password_input.setStyleSheet("""
+                    QLineEdit#passwordInput {
+                        color: white;
+                        background-color: #001417;
+                        border-radius: 0px;
+                        border: 1px solid #02D7F2;
+                        padding: 3px 6px;
+                        font-family: 'Rajdhani Medium';
+                        font-size: 16px;
+                    }
+                    QLineEdit#passwordInput:hover {
+                        background-color: #002A30;
+                        border: 1px solid #02D7F2;
+                    }
+                    QLineEdit#passwordInput:focus {
+                        background-color: #001417;
+                        border: 1px solid #ffffff;
+                    }
+                """)
+            else:
+                self.password_input.setStyleSheet("""
+                    QLineEdit#passwordInput {
+                        color: white;
+                        background-color: #2D2D2D;
+                        border-radius: 4px;
+                        border: 1px solid #404040;
+                        padding: 3px 12px;
+                        font-size: 14px;
+                    }
+                    QLineEdit#passwordInput:hover {
+                        background-color: #383838;
+                        border: 1px solid #505050;
+                    }
+                    QLineEdit#passwordInput:focus {
+                        background-color: #2D2D2D;
+                        border: 1px solid #ffffff;
+                    }
+                """)
+        
+        # Сначала применяем основные стили к главному контейнеру
+        main_container = self.findChild(QWidget, "MainContainer")
+        if main_container:
+            main_container.setStyleSheet(self.theme_styles["APP_STYLES"])
+        
+        # Затем применяем стили к центральному виджету
+        central_widget = self.findChild(QWidget, "CentralWidget")
+        if central_widget:
+            central_widget.setStyleSheet(self.theme_styles["APP_STYLES"])
+        
+        # Затем применяем стили к остальным виджетам
         if hasattr(self, 'mac_window_controls'):
             self.mac_window_controls.setStyleSheet(self.theme_styles["WINDOW_CONTROL_STYLES"])
+        if hasattr(self, 'window_controls_win'):
+            self.window_controls_win.setStyleSheet(self.theme_styles["WINDOW_BUTTON_STYLES"])
         if hasattr(self, 'search_input'):
             self.search_input.setStyleSheet(self.theme_styles["SEARCH_STYLES"])
         if hasattr(self, 'notes_input'):
@@ -184,6 +234,9 @@ class PasswordManagerUI(QMainWindow):
             self.add_button.setStyleSheet(self.theme_styles["ADD_BUTTON_STYLES"])
         if hasattr(self, 'right_panel'):
             self.right_panel.setStyleSheet(self.theme_styles["PANEL_STYLES"])
+            # Обновляем стили формы
+            for widget in self.right_panel.findChildren(QGroupBox):
+                widget.setStyleSheet(self.theme_styles["FORM_STYLES"])
         if hasattr(self, 'left_panel'):
             self.left_panel.setStyleSheet(self.theme_styles["PANEL_STYLES"])
         if hasattr(self, 'main_splitter'):
@@ -192,21 +245,18 @@ class PasswordManagerUI(QMainWindow):
             self.settings_group.setStyleSheet(self.theme_styles.get("SETTINGS_GROUPBOX_STYLES", ""))
         if hasattr(self, 'theme_combo'):
             self.theme_combo.setStyleSheet(self.theme_styles["THEME_COMBOBOX_STYLES"])
-        # Применяем общий стиль к контейнеру
-        if hasattr(self, 'centralWidget'):
-            cw = self.centralWidget()
-            if cw:
-                cw.setStyleSheet(self.theme_styles["APP_STYLES"])
+        if hasattr(self, 'tags_container'):
+            self.tags_container.update_theme(theme_key)
         
         # Обновляем тему в AuthWidget, если он существует
         if hasattr(self, 'auth_widget') and self.auth_widget is not None:
-            print(f"Updating AuthWidget theme to: {theme_key}")  # Отладочный вывод
+            print(f"Updating AuthWidget theme to: {theme_key}")
             self.auth_widget.update_theme(theme_key)
         
         # Сохраняем выбранную тему в настройках
         self.settings_manager.set_setting("appearance", "theme", theme_key)
         
-        # Обновить дочерние виджеты
+        # Обновляем виджеты
         self.repaint()
 
     def apply_saved_settings(self):
@@ -245,7 +295,7 @@ class PasswordManagerUI(QMainWindow):
         # Основной контейнер для тулбара и стека
         container = QWidget()
         container.setObjectName("MainContainer")
-        container.setStyleSheet(self.styles)
+        container.setStyleSheet(self.theme_styles["APP_STYLES"])
         container.setLayout(QVBoxLayout())
         container.layout().setContentsMargins(5, 5, 5, 5)
         container.layout().setSpacing(0)
@@ -326,6 +376,7 @@ class PasswordManagerUI(QMainWindow):
         # Поиск
         search_container = QWidget()
         search_container.setFixedWidth(300)
+        search_container.setFixedHeight(25)
         search_layout = QHBoxLayout(search_container)
         search_layout.setContentsMargins(0, 0, 0, 0)
         search_layout.setSpacing(0)
@@ -354,7 +405,7 @@ class PasswordManagerUI(QMainWindow):
         # Основной виджет с разделителями
         main_widget = QWidget()
         main_widget.setObjectName("CentralWidget")
-        main_widget.setStyleSheet(self.styles)
+        main_widget.setStyleSheet(self.theme_styles["APP_STYLES"])
 
         # Главный горизонтальный разделитель
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -399,28 +450,12 @@ class PasswordManagerUI(QMainWindow):
         # Добавляем кнопку "+" снизу
         add_button_container = QWidget()
         add_button_layout = QHBoxLayout(add_button_container)
-        add_button_layout.setContentsMargins(20, 10, 20, 20)
+        add_button_layout.setContentsMargins(5, 10, 5, 10) #2 up
         
-        self.add_button = QPushButton("+")
+        self.add_button = QPushButton("NEW DATA")
         print("Add button created")  # Отладка
         self.add_button.setMinimumHeight(50)
         self.add_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.add_button.setStyleSheet("""
-            QPushButton {
-                background-color: #1DB954;
-                color: white;
-                border: none;
-                border-radius: 10px;
-                font-size: 24px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #1ed760;
-            }
-            QPushButton:pressed {
-                background-color: #1aa34a;
-            }
-        """)
         self.add_button.clicked.connect(self.show_add_password_panel)
         add_button_layout.addWidget(self.add_button)
         
@@ -537,7 +572,7 @@ class PasswordManagerUI(QMainWindow):
         settings_group_layout = QVBoxLayout()
         settings_group_layout.setSpacing(20)
         settings_group_layout.setContentsMargins(10, 10, 10, 10)
-        settings_group.setStyleSheet(SETTINGS_GROUPBOX_STYLES)
+        settings_group.setStyleSheet(self.theme_styles["SETTINGS_GROUPBOX_STYLES"])
 
         # Appearance секция
         appearance_label = QLabel("Appearance")
@@ -636,19 +671,7 @@ class PasswordManagerUI(QMainWindow):
         content_widget = QWidget()
         input_group = QGroupBox("")
         input_group_layout = QVBoxLayout(input_group)
-        input_group.setStyleSheet("""
-            QGroupBox {
-                background-color: transparent;
-                border-radius: 0px;
-            }
-                    QLabel[required="true"] {
-                color: #ffffff;
-            }
-            QLabel[required="true"]::after {
-                content: " *";
-                color: #ff5555;
-            }
-        """)
+        input_group.setStyleSheet(self.theme_styles["FORM_STYLES"])
 
         self.service_input = QLineEdit(placeholderText="")
         self.url_input = QLineEdit(placeholderText="")
@@ -658,7 +681,7 @@ class PasswordManagerUI(QMainWindow):
 
         # notes
         self.notes_input = QTextEdit()
-        self.notes_input.setStyleSheet(NOTES_STYLES)  # Применяем стили для заметок
+        self.notes_input.setStyleSheet(self.theme_styles["NOTES_STYLES"])
         self.notes_input.setFixedHeight(80)
 
         # Кнопки
@@ -679,11 +702,11 @@ class PasswordManagerUI(QMainWindow):
         password_label_layout.setSpacing(5)
 
         # Создаем метки с указанием обязательных полей
-        service_label = QLabel("Сервис")
+        service_label = QLabel("Service")
         service_label.setProperty("required", True)
-        login_label = QLabel("Логин")
+        login_label = QLabel("Login")
         login_label.setProperty("required", True)
-        password_label = QLabel("Пароль")
+        password_label = QLabel("Password")
         password_label.setProperty("required", True)
 
         self.password_status = PasswordStatusWidget()
@@ -693,11 +716,12 @@ class PasswordManagerUI(QMainWindow):
 
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password_input.setStyleSheet(APP_STYLES)
-
+        self.password_input.setObjectName("passwordInput")
+        
+        # Кнопка видимости пароля
         self.toggle_btn = QToolButton()
         self.toggle_btn.setCheckable(True)
-        self.toggle_btn.setIcon(QIcon("icons/eye2.png"))
+        self.toggle_btn.setIcon(QIcon(self.eye_closed_icon))
         self.toggle_btn.setIconSize(QSize(22, 22))
         self.toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.toggle_btn.setStyleSheet("""
@@ -741,9 +765,9 @@ class PasswordManagerUI(QMainWindow):
         input_group_layout.addWidget(password_container)
         input_group_layout.addWidget(QLabel("Email"))
         input_group_layout.addWidget(self.email_input)
-        input_group_layout.addWidget(QLabel("Телефон"))
+        input_group_layout.addWidget(QLabel("Number"))
         input_group_layout.addWidget(self.phone_input)
-        input_group_layout.addWidget(QLabel("Заметки"))
+        input_group_layout.addWidget(QLabel("Notes"))
         input_group_layout.addWidget(self.notes_input)
         input_group_layout.addLayout(control_panel)
         control_panel.addWidget(self.add_btn)
@@ -916,10 +940,10 @@ class PasswordManagerUI(QMainWindow):
     def toggle_visibility(self, checked):
         if checked:
             self.password_input.setEchoMode(QLineEdit.EchoMode.Normal)
-            self.toggle_btn.setIcon(QIcon("icons/eye1.png"))  # иконка "показать"
+            self.toggle_btn.setIcon(QIcon(self.eye_open_icon))
         else:
             self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-            self.toggle_btn.setIcon(QIcon("icons/eye2.png"))  # иконка "скрыть"
+            self.toggle_btn.setIcon(QIcon(self.eye_closed_icon))
 
     def show_temporary_message(self, text: str, duration: int = 3000, message_type: str = 'default'):
         """Показывает временное сообщение"""
@@ -1082,10 +1106,16 @@ class PasswordManagerUI(QMainWindow):
 
     def reset_autolock_timer(self):
         """Сбрасывает таймер автоблокировки при активности пользователя"""
-        if self.autolock_timer.isActive():
-            print("Resetting autolock timer")  # Отладка
-            self.autolock_timer.stop()
-            self.autolock_timer.start()
+        if not hasattr(self, '_last_reset_time'):
+            self._last_reset_time = 0
+            
+        current_time = time.time()
+        # Сбрасываем таймер не чаще чем раз в секунду
+        if current_time - self._last_reset_time >= 1.0:
+            if self.autolock_timer.isActive():
+                self.autolock_timer.stop()
+                self.autolock_timer.start()
+                self._last_reset_time = current_time
 
     def on_tag_clicked(self, entry_data):
         """Обработчик клика по тегу"""
@@ -1258,22 +1288,10 @@ class PasswordManagerUI(QMainWindow):
         right_index = self.main_splitter.indexOf(self.right_panel)
         
         # Стили для левой панели
-        self.left_panel.setStyleSheet("""
-            #LeftPanel {
-                border-right: 1px solid #404040;
-                border-top: 1px solid #404040;
-                background-color: transparent;
-            }
-        """)
+        self.left_panel.setStyleSheet(self.theme_styles["PANEL_STYLES"])
         
         # Стили для правой панели
-        self.right_panel.setStyleSheet("""
-            #RightPanel {
-                border-left: 1px solid #404040;
-                border-top: 1px solid #404040;
-                background-color: transparent;
-            }
-        """)
+        self.right_panel.setStyleSheet(self.theme_styles["PANEL_STYLES"])
         
         # Скрываем сообщение, если оно показано
         if hasattr(self, 'overlay_message'):
