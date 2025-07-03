@@ -17,36 +17,61 @@ def setup_logging():
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
     
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(os.path.join(log_dir, 'app.log')),
-            logging.StreamHandler()
-        ]
-    )
+    # Настраиваем формат логирования
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    file_handler = logging.FileHandler(os.path.join(log_dir, 'app.log'), encoding='utf-8')
+    file_handler.setFormatter(logging.Formatter(log_format))
+    
+    # Добавляем более подробный формат для отладки
+    debug_handler = logging.FileHandler(os.path.join(log_dir, 'debug.log'), encoding='utf-8')
+    debug_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]'
+    ))
+    debug_handler.setLevel(logging.DEBUG)
+    
+    # Настраиваем корневой логгер
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)  # Устанавливаем самый подробный уровень для корневого логгера
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(debug_handler)
+    
+    # Добавляем вывод в консоль
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(log_format))
+    console_handler.setLevel(logging.INFO)
+    root_logger.addHandler(console_handler)
+    
     return logging.getLogger(__name__)
 
 def check_environment():
     """Проверяет окружение приложения"""
+    logger = logging.getLogger(__name__)
+    
     # Проверяем версию Python
     if sys.version_info < (3, 9):
+        logger.error("Требуется Python 3.9 или выше")
         raise RuntimeError("Требуется Python 3.9 или выше")
     
     # Проверяем наличие необходимых директорий
     required_dirs = ['vaults', 'app_cache', 'backups']
     for dir_name in required_dirs:
-        os.makedirs(dir_name, exist_ok=True)
-    
-    # Проверяем права на запись
-    for dir_name in required_dirs:
-        test_file = os.path.join(dir_name, '.test')
         try:
-            with open(test_file, 'w') as f:
-                f.write('test')
-            os.remove(test_file)
+            logger.debug(f"Проверка директории: {dir_name}")
+            os.makedirs(dir_name, exist_ok=True)
+            
+            # Проверяем права на запись
+            test_file = os.path.join(dir_name, '.test')
+            try:
+                with open(test_file, 'w') as f:
+                    f.write('test')
+                os.remove(test_file)
+                logger.debug(f"Директория {dir_name} доступна для записи")
+            except Exception as e:
+                logger.error(f"Нет прав на запись в директорию {dir_name}: {e}")
+                raise RuntimeError(f"Нет прав на запись в директорию {dir_name}: {e}")
         except Exception as e:
-            raise RuntimeError(f"Нет прав на запись в директорию {dir_name}: {e}")
+            logger.error(f"Ошибка при проверке директории {dir_name}: {e}")
+            raise RuntimeError(f"Ошибка при проверке директории {dir_name}: {e}")
 
 def load_fonts(folder="fonts"):
     """Загружает шрифты из указанной папки в приложение"""
@@ -84,6 +109,9 @@ def load_fonts(folder="fonts"):
 
 def show_error_and_exit(message):
     """Показывает сообщение об ошибке и завершает приложение"""
+    logger = logging.getLogger(__name__)
+    logger.critical(f"Критическая ошибка: {message}")
+    
     if QApplication.instance() is None:
         QApplication([])
     QMessageBox.critical(None, "Критическая ошибка", message)

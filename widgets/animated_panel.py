@@ -73,7 +73,7 @@ class AnimatedPanel:
         
         # Обновляем splitter во время анимации
         def on_value_changed(width):
-            print(f"Animation progress: width={width}")  # Отладка
+            # print(f"Animation progress: width={width}")  # Убираем логирование прогресса
             self._set_panel_size(width, True)
             
         self.animation.valueChanged.connect(on_value_changed)

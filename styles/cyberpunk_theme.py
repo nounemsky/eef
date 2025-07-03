@@ -4,10 +4,11 @@
 APP_STYLES = """
 #MainContainer {
     background-color: transparent;
-    background-image: url("styles/images/cyberpunk/background.png");
+    background-image: url("styles/images/cyberpunk/background1.png");
     background-repeat: no-repeat;
     background-position: center;
     border: 1px solid #000000;
+    border-radius: 5px;
 }
 #CentralWidget {
     background-color: transparent;
@@ -19,24 +20,6 @@ QLabel {
     color: #00fff7;
     font-family: 'Rajdhani Regular';
     font-size: 14px;
-}
-
-QPushButton {
-    background-color: #1a0040;
-    color: #00fff7;
-    border: 1px solid #ff00ea;
-    border-radius: 4px;
-    padding: 5px 10px;
-    font-family: 'Rajdhani Regular';
-}
-
-QPushButton:hover {
-    background-color: #2a0066;
-    border: 1px solid #00fff7;
-}
-
-QPushButton:pressed {
-    background-color: #3a008c;
 }
 
 QLineEdit {
@@ -165,9 +148,7 @@ QPushButton#continue-btn {
     background-image: url("styles/images/cyberpunk/CONNECT.png");
     background-repeat: no-repeat;
     background-position: left center;
-    border: none;
     border-radius: 0px;
-    min-width: 250px;
     min-height: 40px;
     padding: 0px;
     margin: 0px;
@@ -176,11 +157,11 @@ QPushButton#continue-btn {
 
 QPushButton#continue-btn:hover {
     background-image: url("styles/images/cyberpunk/CONNECTHOVER.png");
-    border: none;
 }
 
 QPushButton#continue-btn:pressed {
     background-image: url("styles/images/cyberpunk/CONNECTPRESSED.png");
+    background-position: right center;
     border: none;
 }
 """
@@ -247,33 +228,45 @@ WINDOW_CONTROL_STYLES = """
 }
 
 #closeButton {
-    background-color: #2D0008;
-    border: 1px solid #00F0FF;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/MAC.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 
 #closeButton:hover {
-    background-color: #000000;
-    border: 1px solid #F75049;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/MACHOVER.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 
 #minimizeButton {
-    background-color: #2D0008;
-    border: 1px solid #00F0FF;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/MAC.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 
 #minimizeButton:hover {
-    background-color: #000000;
-    border: 1px solid #F75049;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/MACHOVER.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 
 #maximizeButton {
-    background-color: #2D0008;
-    border: 1px solid #00F0FF;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/MAC.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 
 #maximizeButton:hover {
-    background-color: #000000;
-    border: 1px solid #F75049;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/MACHOVER.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 
 QPushButton.windowButton {
@@ -470,11 +463,12 @@ ADD_BUTTON_STYLES = """
         background-color: transparent;
         background-image: url("styles/images/cyberpunk/ADD.png");
         background-repeat: no-repeat;
-        background-position: right center;
+        background-position: right center ;
         border: none;
         font-weight: bold;
-        font-size: 14px;
-        font-family: 'Regular';
+        font-size: 18px;
+        color: #CDCDCD;
+        font-family: 'Rajdhani';
         border-radius: 0px;
     }
     QPushButton:hover {
@@ -613,7 +607,6 @@ WINDOW_BUTTON_STYLES = """
 QPushButton.windowButton {
     background-color: transparent;
     color: #00fff7;
-    border-left: 1px solid #00fff7;
     font-size: 20px;
     font-weight: bold;
     padding: 0px;
@@ -658,18 +651,66 @@ QToolButton:hover {
 }
 """
 
-LAZY_ICON_STYLES = """
+LAZY_ICON_STYLES = {
+    "default": """
+QWidget {
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/CHIPLAZYICON.png");
+            background-repeat: no-repeat;
+            background-position: center;
+}
+""",
+    "no_url": """
 QLabel {
-    background-color: transparent;
-    border: none;
+            background-color: transparent;
+            background-image: url("styles/images/cyberpunk/NOTURL.png");
+            background-repeat: no-repeat;
+            background-position: center;
 }
 """
+}
 
 # Стили для формы
 FORM_STYLES = """
 QGroupBox {
     background-color: transparent;
     border-radius: 0px;
+}
+
+/* Стиль для кнопки Save */
+QPushButton#saveButton {
+    background-image: url("styles/images/cyberpunk/SAVE.png");
+    background-repeat: no-repeat;
+    background-position:left center;
+    border: none;
+    color: transparent;
+    min-height: 50px;
+}
+
+QPushButton#saveButton:hover {
+    background-image: url("styles/images/cyberpunk/SAVEHOVER.png");
+}
+
+QPushButton#saveButton:pressed {
+    background-image: url("styles/images/cyberpunk/SAVEPRESSED.png");
+}
+
+/* Стиль для кнопки Generate */
+QPushButton#generateButton {
+    background-image: url("styles/images/cyberpunk/GENERATE.png");
+    background-repeat: no-repeat;
+    background-position: right center;
+    border: none;
+    color: transparent;
+    min-height: 50px;
+}
+
+QPushButton#generateButton:hover {
+    background-image: url("styles/images/cyberpunk/GENERATEHOVER.png");
+}
+
+QPushButton#generateButton:pressed {
+    background-image: url("styles/images/cyberpunk/GENERATEPRESSED.png");
 }
 
 QLabel {

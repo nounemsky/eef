@@ -1,10 +1,10 @@
 {
     "appearance": {
         "theme": "cyberpunk",
-        "button_style": "macOS style"
+        "button_style": "Windows style"
     },
     "security": {
-        "autolock_minutes": 15.0,
+        "autolock_minutes": 1.6666666666666667,
         "min_password_length": 8,
         "require_special_chars": true,
         "backup_count": 5

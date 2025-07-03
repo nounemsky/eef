@@ -19,11 +19,12 @@ from .components import (
 
 from .widgets import (
     CHIP_STYLES,
-    LAZY_ICON_STYLES,
     PASSWORD_STATUS_WIDGET_STYLES,
     SKIP_BUTTON_STYLES,
     ADD_BUTTON_STYLES
 )
+
+from .cyberpunk_theme import LAZY_ICON_STYLES
 
 from .dialogs import (
     PASSWORD_GENERATOR_STYLES,

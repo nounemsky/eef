@@ -51,7 +51,7 @@ class AuthWidget(QWidget):
                 "username_placeholder": "Имя пользователя",
                 "pin_placeholder": "PIN",
                 "confirm_pin_placeholder": "Подтвердите PIN",
-                "continue_btn": "Continue",
+                "continue_btn": "сontinue",
                 "save_btn": "Сохранить",
                 "skip_btn": "skip",
                 "back_btn": "Назад",

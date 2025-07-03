@@ -3,7 +3,10 @@
 # Основные стили приложения
 APP_STYLES = """
 #MainContainer {
-    background-color: rgba(20, 20, 20, 253);
+    background-color: transparent;
+    background-image: url("styles/images/default/BACKGROUND.png");
+    background-repeat: no-repeat;
+    background-position: center;
     border-radius: 8px;
     border: 1px solid #3a3a3a;
 }
@@ -20,11 +23,20 @@ QLabel {
 }
 
 QLineEdit {
-    background-color: #3c3f41; 
-    color: #ffffff;
-    border: 1px solid #606060;
-    border-radius: 4px; 
-    padding: 5px;
+     color: white;
+     background-color: #303030;
+     border-radius: 4px;
+     border: 1px solid #606060;
+     padding: 3px 12px;
+     font-size: 14px;
+}
+QLineEdit:hover {
+     background-color: #383838;
+     border: 1px solid #505050;
+}
+QLineEdit:focus {
+     background-color: #404040;
+     border: 1px solid #CDCDCD;
 }
 QLineEdit#passwordInput {
     color: white;
@@ -69,6 +81,16 @@ QPushButton:pressed {
     background-color: #27ae60; 
 }
 
+
+QLabel#lazyIconLabel {
+    background-color: transparent;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-position: center;
+    border: 0px solid #cdcdcd;
+    border-radius: 0px;
+    color: #ffffff;
+}
 QProgressBar {
     background-color: rgba(250, 250, 250, 10);
     border: none;
@@ -79,7 +101,21 @@ QProgressBar::chunk {
     background-color: #2ecc71;
 }
 """
-
+LAZY_ICON_STYLES = {
+    "default": """
+QWidget {
+            background-color: transparent;
+}
+""",
+    "no_url": """
+QWidget {
+            background-color: transparent;
+            background-image: url("styles/images/default/NOTURL.png");
+            background-repeat: no-repeat;
+            background-position: center;
+}
+"""
+}
 # Стили для поиска
 SEARCH_STYLES = """
 QLineEdit {

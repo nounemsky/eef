@@ -50,16 +50,15 @@ QPushButton.windowButton:hover {
 WINDOW_BUTTON_STYLES = """
 QPushButton.windowButton {
     background-color: transparent;
-    color: #00fff7;
-    border-left: 1px solid #00fff7;
-    font-size: 20px;
+    color: white;
+    font-size: 18px;
     font-weight: bold;
     padding: 0px;
     text-align: center;
 }
 
 QPushButton.windowButton:hover {
-    background-color: rgba(0, 255, 247, 0.15);
+    background-color: rgba(255, 255, 247, 0.15);
 }
 
 QLabel.loginLabel {

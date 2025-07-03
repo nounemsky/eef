@@ -157,6 +157,9 @@ class CryptoManagerV2:
         if not encrypted_data:
             return {"passwords": [], "categories": []}
             
+        enc_key = None
+        auth_key = None
+        
         try:
             data = json.loads(encrypted_data)
             version = data.get("config", {}).get("version", 2)
@@ -198,28 +201,38 @@ class CryptoManagerV2:
                 return result
                 
             except InvalidTag:
-                raise ValueError("Ошибка аутентификации данных!")
-            except InvalidSignature:
-                raise ValueError("Ошибка целостности данных!")
+                raise ValueError("Ошибка проверки целостности данных")
                 
-        except json.JSONDecodeError:
-            return {"passwords": [], "categories": []}
         except Exception as e:
-            print(f"Ошибка расшифровки: {str(e)}")
+            print(f"Ошибка расшифровки данных: {str(e)}")
             return {"passwords": [], "categories": []}
+            
         finally:
             # Очищаем ключи из памяти
-            if 'enc_key' in locals(): del enc_key
-            if 'auth_key' in locals(): del auth_key
+            if enc_key:
+                del enc_key
+            if auth_key:
+                del auth_key
+            # Принудительно вызываем сборщик мусора
+            import gc
+            gc.collect()
 
     def __del__(self):
-        """Очистка секретных данных при уничтожении объекта"""
-        if hasattr(self, '_instance_salt'):
-            self._instance_salt.clear()
-        if hasattr(self, '_memory_key'):
-            self._memory_key.clear()
-        if hasattr(self, '_encrypted_secret'):
-            # Перезаписываем случайными данными
-            self._encrypted_secret = os.urandom(len(self._encrypted_secret))
-            # Удаляем ссылку
-            del self._encrypted_secret 
+        """Очищаем все секретные данные при удалении объекта"""
+        try:
+            if hasattr(self, '_instance_salt'):
+                self._instance_salt.clear()
+                del self._instance_salt
+            if hasattr(self, '_memory_key'):
+                self._memory_key.clear()
+                del self._memory_key
+            if hasattr(self, '_encrypted_secret'):
+                # Перезаписываем случайными данными
+                self._encrypted_secret = os.urandom(len(self._encrypted_secret))
+                del self._encrypted_secret
+        except:
+            pass
+        finally:
+            # Принудительно вызываем сборщик мусора
+            import gc
+            gc.collect() 

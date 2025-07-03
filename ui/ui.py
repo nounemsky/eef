@@ -195,9 +195,9 @@ class PasswordManagerUI(QMainWindow):
                 self.password_input.setStyleSheet("""
                     QLineEdit#passwordInput {
                         color: white;
-                        background-color: #2D2D2D;
+                        background-color: #303030;
                         border-radius: 4px;
-                        border: 1px solid #404040;
+                        border: 1px solid #606060;
                         padding: 3px 12px;
                         font-size: 14px;
                     }
@@ -206,8 +206,8 @@ class PasswordManagerUI(QMainWindow):
                         border: 1px solid #505050;
                     }
                     QLineEdit#passwordInput:focus {
-                        background-color: #2D2D2D;
-                        border: 1px solid #ffffff;
+                        background-color: #404040;
+                        border: 1px solid #CDCDCD;
                     }
                 """)
         
@@ -220,7 +220,7 @@ class PasswordManagerUI(QMainWindow):
         central_widget = self.findChild(QWidget, "CentralWidget")
         if central_widget:
             central_widget.setStyleSheet(self.theme_styles["APP_STYLES"])
-        
+
         # Затем применяем стили к остальным виджетам
         if hasattr(self, 'mac_window_controls'):
             self.mac_window_controls.setStyleSheet(self.theme_styles["WINDOW_CONTROL_STYLES"])
@@ -255,7 +255,7 @@ class PasswordManagerUI(QMainWindow):
         
         # Сохраняем выбранную тему в настройках
         self.settings_manager.set_setting("appearance", "theme", theme_key)
-        
+
         # Обновляем виджеты
         self.repaint()
 
@@ -288,7 +288,7 @@ class PasswordManagerUI(QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle("Secure Password Manager")
-        self.setGeometry(490, 200, 1000, 600)
+        self.setGeometry(350, 200, 1200, 700)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -380,7 +380,7 @@ class PasswordManagerUI(QMainWindow):
         search_layout = QHBoxLayout(search_container)
         search_layout.setContentsMargins(0, 0, 0, 0)
         search_layout.setSpacing(0)
-        
+
         # Поле поиска
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search")
@@ -410,7 +410,7 @@ class PasswordManagerUI(QMainWindow):
         # Главный горизонтальный разделитель
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.main_splitter.setHandleWidth(1)  # делаем разделитель тоньше
-        self.main_splitter.setChildrenCollapsible(True)  # Разрешаем схлопывание панелей
+        self.main_splitter.setChildrenCollapsible(False)  # Разрешаем схлопывание панелей
         self.main_splitter.setStyleSheet("""
             QSplitter::handle {
                 background-color: #404040;
@@ -682,12 +682,14 @@ class PasswordManagerUI(QMainWindow):
         # notes
         self.notes_input = QTextEdit()
         self.notes_input.setStyleSheet(self.theme_styles["NOTES_STYLES"])
-        self.notes_input.setFixedHeight(80)
+        self.notes_input.setFixedHeight(120)
 
         # Кнопки
         control_panel = QHBoxLayout()
-        self.add_btn = QPushButton("Save")
-        self.generate_btn = QPushButton("Generate")
+        self.add_btn = QPushButton("SAVE")
+        self.generate_btn = QPushButton("GENERATE")
+        self.add_btn.setObjectName("saveButton")
+        self.generate_btn.setObjectName("generateButton")
 
         # Поле пароля с глазиком внутри
         password_container = QWidget()
@@ -757,7 +759,7 @@ class PasswordManagerUI(QMainWindow):
         # Сборка всего
         input_group_layout.addWidget(service_label)
         input_group_layout.addWidget(self.service_input)
-        input_group_layout.addWidget(QLabel("URL"))
+        input_group_layout.addWidget(QLabel("Url"))
         input_group_layout.addWidget(self.url_input)
         input_group_layout.addWidget(login_label)
         input_group_layout.addWidget(self.login_input)

@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import logging
 from typing import Optional, Dict, List, Any
 from .crypto_manager import CryptoManagerV2
 from .backup_manager import BackupManager
@@ -13,14 +14,24 @@ class PasswordManager:
 
     def __init__(self, login: str, password: str):
         """Инициализация менеджера паролей"""
+        self.logger = logging.getLogger(__name__)
+        self.logger.info(f"Инициализация PasswordManager для пользователя {login}")
+        
         self.login = login
         self.vault_path = self._get_vault_path(login)
+        self.logger.debug(f"Путь к vault файлу: {self.vault_path}")
+        
         self.crypto = CryptoManagerV2(login, password)
         self.backup = BackupManager(self.crypto)
         self.validator = DataValidator()
         self.data = {"passwords": [], "categories": ["Без категории"]}
-        self._ensure_vault_dir_exists()
-        self._load_data()
+        
+        try:
+            self._ensure_vault_dir_exists()
+            self._load_data()
+        except Exception as e:
+            self.logger.error(f"Ошибка инициализации: {str(e)}", exc_info=True)
+            raise
 
     @property
     def passwords(self) -> list:
@@ -40,19 +51,45 @@ class PasswordManager:
     def _ensure_vault_dir_exists(self):
         """Создает директорию для хранилища если она не существует"""
         try:
-            if not os.path.exists(self.VAULT_DIR):
-                os.makedirs(self.VAULT_DIR, exist_ok=True)
-                # Проверяем, что директория создана и доступна для записи
-                test_file = os.path.join(self.VAULT_DIR, '.test')
+            # Создаем все необходимые директории
+            dirs_to_check = [
+                self.VAULT_DIR,
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "backups"),
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "app_cache")
+            ]
+            
+            for dir_path in dirs_to_check:
+                self.logger.debug(f"Проверка директории: {dir_path}")
+                if not os.path.exists(dir_path):
+                    self.logger.info(f"Создание директории: {dir_path}")
+                    os.makedirs(dir_path, exist_ok=True)
+                
+                # Проверяем права на запись
+                test_file = os.path.join(dir_path, '.test')
                 try:
+                    self.logger.debug(f"Проверка прав на запись в {dir_path}")
                     with open(test_file, 'w') as f:
                         f.write('test')
                     os.remove(test_file)
+                    self.logger.debug(f"Права на запись в {dir_path} подтверждены")
                 except Exception as e:
-                    print(f"Предупреждение: директория создана, но может быть недоступна для записи: {str(e)}")
+                    self.logger.error(f"Нет прав на запись в директорию {dir_path}: {str(e)}")
+                    raise ValueError(f"Нет прав на запись в директорию {dir_path}: {str(e)}")
+                    
+            # Проверяем права на vault файл
+            if os.path.exists(self.vault_path):
+                try:
+                    self.logger.debug(f"Проверка прав на vault файл: {self.vault_path}")
+                    with open(self.vault_path, 'a') as f:
+                        pass
+                    self.logger.debug("Права на vault файл подтверждены")
+                except Exception as e:
+                    self.logger.error(f"Нет прав на запись в файл vault: {str(e)}")
+                    raise ValueError(f"Нет прав на запись в файл vault: {str(e)}")
+                    
         except Exception as e:
-            print(f"Ошибка создания директории хранилища: {str(e)}")
-            raise ValueError("Не удалось создать директорию хранилища. Проверьте права доступа к папке.")
+            self.logger.error(f"Ошибка проверки директорий: {str(e)}", exc_info=True)
+            raise
 
     def _load_data(self):
         """Загружает данные из хранилища"""
@@ -70,26 +107,84 @@ class PasswordManager:
 
     def save_data(self) -> bool:
         """Сохраняет данные в хранилище"""
+        temp_path = None
         try:
-            # Создаем бэкап перед сохранением
-            self.backup.create_backup(self.vault_path, self.data)
+            self.logger.info("Начало процесса сохранения данных")
             
-            # Шифруем и сохраняем данные
+            # Проверяем права доступа перед сохранением
+            if os.path.exists(self.vault_path):
+                try:
+                    self.logger.debug(f"Проверка блокировки файла: {self.vault_path}")
+                    with open(self.vault_path, 'r+') as f:
+                        # Получаем эксклюзивную блокировку
+                        import msvcrt
+                        self.logger.debug("Попытка получить блокировку файла")
+                        msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1)
+                        # Освобождаем блокировку
+                        msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+                        self.logger.debug("Блокировка файла успешно проверена")
+                except Exception as e:
+                    self.logger.error(f"Файл vault заблокирован или недоступен: {str(e)}")
+                    raise ValueError(f"Файл vault заблокирован или недоступен: {str(e)}")
+            
+            # Создаем временный файл в той же директории
+            temp_path = os.path.join(os.path.dirname(self.vault_path), f".tmp_{os.path.basename(self.vault_path)}")
+            self.logger.debug(f"Создание временного файла: {temp_path}")
+            
+            # Шифруем данные
+            self.logger.debug("Шифрование данных")
             encrypted = self.crypto.encrypt_data(self.data)
-            with open(self.vault_path, 'w') as f:
+            
+            # Записываем во временный файл
+            self.logger.debug("Запись во временный файл")
+            with open(temp_path, 'w') as f:
                 f.write(encrypted)
-                
+            
+            # Создаем бэкап только после успешной записи во временный файл
+            self.logger.debug("Создание резервной копии")
+            backup_result = self.backup.create_backup(self.vault_path, self.data)
+            if not backup_result:
+                self.logger.error("Не удалось создать резервную копию")
+                raise ValueError("Не удалось создать резервную копию")
+            
+            # Если файл vault существует, пытаемся его удалить
+            if os.path.exists(self.vault_path):
+                try:
+                    self.logger.debug(f"Удаление старого файла: {self.vault_path}")
+                    os.remove(self.vault_path)
+                except Exception as e:
+                    self.logger.warning(f"Не удалось удалить старый файл: {str(e)}")
+                    # Ждем немного и пробуем снова
+                    import time
+                    time.sleep(0.1)
+                    self.logger.debug("Повторная попытка удаления старого файла")
+                    os.remove(self.vault_path)
+            
+            # Переименовываем временный файл
+            self.logger.debug(f"Переименование временного файла {temp_path} в {self.vault_path}")
+            os.rename(temp_path, self.vault_path)
+            
+            self.logger.info("Данные успешно сохранены")
             return True
+            
         except Exception as e:
-            import traceback
-            print(f"Ошибка сохранения данных: {str(e)}")
-            traceback.print_exc()
+            self.logger.error(f"Ошибка сохранения данных: {str(e)}", exc_info=True)
+            # Очищаем временный файл при ошибке
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    self.logger.debug(f"Удаление временного файла после ошибки: {temp_path}")
+                    os.remove(temp_path)
+                except:
+                    self.logger.warning(f"Не удалось удалить временный файл: {temp_path}")
             return False
 
     def save_password(self, service: str, password: str, category: str = "Без категории", **kwargs) -> bool:
         """Сохраняет новый пароль или обновляет существующий"""
         try:
+            self.logger.info(f"Попытка сохранения пароля для сервиса: {service}")
+            
             # Валидация данных
+            self.logger.debug("Валидация данных")
             if not self.validator.validate_service(service):
                 raise ValueError("Некорректное название сервиса")
             if not self.validator.validate_password(password):
@@ -99,40 +194,37 @@ class PasswordManager:
 
             # Проверяем дополнительные поля
             for key, value in kwargs.items():
+                self.logger.debug(f"Проверка дополнительного поля: {key}")
                 if key == "url" and not self.validator.validate_url(value):
                     raise ValueError("Некорректный URL")
                 elif key == "email" and not self.validator.validate_email(value):
                     raise ValueError("Некорректный email")
-                elif key == "phone" and not self.validator.validate_phone(value):
-                    raise ValueError("Некорректный телефон")
-                elif key == "notes" and not self.validator.validate_notes(value):
-                    raise ValueError("Слишком длинные заметки")
 
-            # Создаем или обновляем запись
-            entry = {
-                "service": service,
-                "password": password,
-                "category": category,
-                "created": int(time.time()),
-                "modified": int(time.time())
-            }
-            entry.update(kwargs)  # Добавляем дополнительные поля
-
+            # Добавляем timestamp
+            current_time = int(time.time())
+            
             # Ищем существующую запись
-            existing_index = None
-            for i, item in enumerate(self.data["passwords"]):
-                if item["service"] == service:
-                    existing_index = i
+            for entry in self.data["passwords"]:
+                if entry["service"] == service:
+                    # Обновляем существующую запись
+                    entry.update({
+                        "password": password,
+                        "category": category,
+                        "modified_at": current_time,
+                        **kwargs
+                    })
                     break
-
-            if existing_index is not None:
-                # Обновляем существующую запись
-                old_entry = self.data["passwords"][existing_index]
-                entry["created"] = old_entry.get("created", entry["created"])
-                self.data["passwords"][existing_index] = entry
             else:
-                # Добавляем новую запись
-                self.data["passwords"].append(entry)
+                # Создаем новую запись
+                new_entry = {
+                    "service": service,
+                    "password": password,
+                    "category": category,
+                    "created_at": current_time,
+                    "modified_at": current_time,
+                    **kwargs
+                }
+                self.data["passwords"].append(new_entry)
 
             # Добавляем категорию, если её нет
             if category not in self.data["categories"]:
@@ -141,7 +233,7 @@ class PasswordManager:
             return self.save_data()
 
         except Exception as e:
-            print(f"Ошибка сохранения пароля: {str(e)}")
+            self.logger.error(f"Ошибка сохранения пароля: {str(e)}", exc_info=True)
             return False
 
     def get_entry_by_service(self, service_name: str) -> Optional[dict]:
@@ -160,33 +252,57 @@ class PasswordManager:
         try:
             filtered = []
             search_text = search_text.lower()
+            
+            self.logger.debug(f"Начало фильтрации. Всего паролей: {len(self.data['passwords'])}")
+            self.logger.debug(f"Поисковый запрос: '{search_text}', категория: '{category}'")
 
-            for entry in self.data["passwords"]:
-                # Фильтр по категории
-                if category != "Все категории" and entry["category"] != category:
-                    continue
-
-                # Фильтр по тексту
-                if search_text:
-                    service = entry["service"].lower()
-                    url = entry.get("url", "").lower()
-                    email = entry.get("email", "").lower()
-                    notes = entry.get("notes", "").lower()
-
-                    if not any([
-                        search_text in service,
-                        search_text in url,
-                        search_text in email,
-                        search_text in notes
-                    ]):
+            for i, entry in enumerate(self.data["passwords"]):
+                try:
+                    # Проверяем структуру записи
+                    if not isinstance(entry, dict):
+                        self.logger.error(f"Некорректный тип записи #{i}: {type(entry)}")
+                        continue
+                        
+                    # Проверяем обязательные поля
+                    required_fields = ["service", "password", "category"]
+                    missing_fields = [field for field in required_fields if field not in entry]
+                    if missing_fields:
+                        self.logger.error(f"В записи #{i} отсутствуют обязательные поля: {missing_fields}")
                         continue
 
-                filtered.append(entry.copy())  # Добавляем копию для безопасности
+                    # Фильтр по категории
+                    if category != "Все категории" and entry["category"] != category:
+                        self.logger.debug(f"Запись #{i} пропущена по категории")
+                        continue
 
+                    # Фильтр по тексту
+                    if search_text:
+                        service = entry["service"].lower()
+                        url = entry.get("url", "").lower()
+                        email = entry.get("email", "").lower()
+                        notes = entry.get("notes", "").lower()
+
+                        if not any([
+                            search_text in service,
+                            search_text in url,
+                            search_text in email,
+                            search_text in notes
+                        ]):
+                            self.logger.debug(f"Запись #{i} не соответствует поисковому запросу")
+                            continue
+
+                    self.logger.debug(f"Добавляем запись #{i} (сервис: {entry.get('service', 'unknown')})")
+                    filtered.append(entry.copy())  # Добавляем копию для безопасности
+                    
+                except Exception as e:
+                    self.logger.error(f"Ошибка при обработке записи #{i}: {str(e)}", exc_info=True)
+                    continue
+
+            self.logger.debug(f"Фильтрация завершена. Найдено записей: {len(filtered)}")
             return filtered
 
         except Exception as e:
-            print(f"Ошибка фильтрации записей: {str(e)}")
+            self.logger.error(f"Ошибка фильтрации записей: {str(e)}", exc_info=True)
             return []
 
     def add_category(self, name: str) -> bool:

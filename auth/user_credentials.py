@@ -9,7 +9,7 @@ class UserCredentials:
     def __init__(self):
         self.credentials_file = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
-            "app_cache",
+            "vaults",
             "credentials.json"
         )
         try:

@@ -4,9 +4,8 @@
 CHIP_STYLES = {
       'default': """
           QWidget#ChipWidget {
-              background-color: rgba(0,0,0,0.2);
-            border-top: 0px;
-            border-right: 0px;
+            background-color: transparent;
+            border: 1px;
             border-bottom: 1px solid #444;
             padding: 10px;
         }
@@ -22,13 +21,6 @@ CHIP_STYLES = {
     """
 }
 
-# Стили для ленивой иконки (LazyIconLabel)
-LAZY_ICON_STYLES = """
-    QLabel {
-        background-color: transparent;
-        border: none;
-    }
-"""
 
 # Стили для статуса пароля (PasswordStatusWidget)
 PASSWORD_STATUS_WIDGET_STYLES = {
@@ -83,18 +75,18 @@ SKIP_BUTTON_STYLES = """
 # Стили для кнопки добавления
 ADD_BUTTON_STYLES = """
     QPushButton {
-        background-color: #1DB954;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 12px;
-        font-weight: bold;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
     }
     QPushButton:hover {
-        background-color: #1ed760;
+    background-color: #3498db;
     }
     QPushButton:pressed {
-        background-color: #1aa34a;
+    background-color: #1a6ca8;
     }
 """
 
@@ -103,25 +95,22 @@ CONTINUE_BUTTON_STYLES = """
     QPushButton {
         background-color: #ffffff;
         color: #000000;
-        border: 2px solid #202020;
-        border-radius: 20px;
+        border: 1px solid #202020;
+        border-radius: 10px;
         min-width: 235px;
         min-height: 40px;
         text-align: center;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: bold;
         padding: 0;
         margin: 0;
     }
     QPushButton:hover {
-        background-color: #f0f0f0;
-        border: 1px solid #000000;
-        border-radius: 5px;
+        background-color: #C9E4CA;
     }
     QPushButton:pressed {
         background-color: #e0e0e0;
-        border: 1px solid #000000;
-        border-radius: 5px;
+        
     }
 """
 
@@ -129,18 +118,18 @@ CONTINUE_BUTTON_STYLES = """
 CHIP_WIDGET_STYLES = {
     "default": """
         QWidget#ChipWidget {
-            background: #404040;
-            border: 1px solid #333333;
-            border-radius: 4px;
+            background: transparent;
+            border: 0px solid #333333;
             padding: 50px;
         }
         QWidget#ChipWidget:hover {
-            background: #2A2A2A;
-            border: 1px solid #444444;
+            background-color: #505050;
+            border-radius: 5px;
         }
         QWidget#ChipWidget[selected="true"] {
             background: #2A2A2A;
             border: 1px solid #444444;
+            border-radius: 5px;
         }
         QWidget#ChipWidget QLabel {
             color: #FFFFFF;
@@ -193,7 +182,7 @@ TAGS_CONTAINER_STYLES = {
                 background: transparent;
             }
             QWidget#TagsInnerContainer {
-                background-color: #141414;
+                background: transparent;
                 border-radius: 0px;
                 padding: 5px;
             }
@@ -245,9 +234,13 @@ CHIP_LABEL_STYLES = {
             font-size: 14px;
             font-weight: bold;
         """,
-        "secondary": """
-            color: #888888;
-            font-size: 12px;
+        "service": """
+            color: #ffffff;
+            font-size: 14px;
+        """,
+        "url": """
+            color: #707070;
+            font-size: 14px;
         """
     },
     "cyberpunk": {
@@ -257,9 +250,14 @@ CHIP_LABEL_STYLES = {
             font-family: 'Orbitron';
             font-weight: bold;
         """,
-        "secondary": """
-            color: #00fff7;
-            font-family: 'Rajdhani Regular';
+        "service": """
+            color: #00F0FF;
+            font-family: 'Rajdhani Medium';
+            font-size: 14px;
+        """,
+        "url": """
+            color: #FF3B33;
+            font-family: 'Rajdhani Medium';
             font-size: 14px;
         """
     }
